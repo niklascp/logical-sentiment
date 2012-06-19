@@ -1,0 +1,50 @@
+%!TEX root = Thesis.tex
+
+\chapter{Combinatory categorial grammar}
+\label{chap:CCG}
+
+We expect such an algorithm to calculate a match score, that is a weighted average over several metrics. Given below are methods for calculating scores for some evident metrics.
+
+\begin{itemize}
+  \item Symbolic similarity -- at its most basic form we can consider a sample string (i.e. a word from an input text) against the system's vocabulary using approximate string matching algorithms such as the  \emph{Levenshtein distance} as described by \cite{Wagner}.
+
+  \item Pronunciation similarity -- it is an valid assumption that many misspellings still share a majority of the pronunciation with the intended word, i.e. they are approximately homophone. Thus comparing the phonetic properties of an sample string with possible matches can in cases correct misspellings. The \emph{Soundex algorithm} by Robert C. Russell and Margaret K. Odell, as described by \cite[p. 391–92]{ACP3}, is a simple, yet power full approach for this purpose.
+
+\end{itemize}
+
+\section{Features and agreement}
+In order to ensure that the parsed phrases indeed follows correct English grammar, it is not enough to only consider the phrase structure with respect to the word classes. It is also necessary to 
+
+As stated it is essential to categorize phrases, however it is important to notice, that each category can have numerous arguments i.a. denoting features that apply. For instance Bob Carpenter [1995] states features for person (e.g. 1st, 2nd, or 3rd), number (e.g. singular or plural), and case (e.g. subject or object). The set of features that may apply is language dependent, for instance most indo-european langauges1 has gender features (English being an exception2), but while Danish use common and neuter classes, other languages like German use masculine, feminine, and neuter classes. The important is thus solely that the set of features is always finite – limited by the specific langauge. 
+
+\cite{cs}
+
+
+\section{Find a good title}
+The initial attempt is simply to construct a parser that 
+
+\begin{quote}
+	There are three basic ways to build a shift-reduce parser. Full LR(1) (the `L' is the direction in which the input is scanned, the `R' is the way in which the parse is built, and the `1' is the number of tokens of lookahead) generates a parser with many states, and is therefore large and slow. SLR(1) (simple LR(1)) is a cut-down version of LR(1) which generates parsers with roughly one-tenth as many states, but lacks the power to parse many grammars (it finds conflicts in grammars which have none under LR(1)).
+\end{quote}
+
+\begin{quote}
+LALR(1) (look-ahead LR(1)), the method used by Happy and yacc, is tradeoff between the two. An LALR(1) parser has the same number of states as an SLR(1) parser, but it uses a more complex method to calculate the lookahead tokens that are valid at each point, and resolves many of the conflicts that SLR(1) finds. However, there may still be conflicts in an LALR(1) parser that wouldn't be there with full LR(1).
+\end{quote}
+
+The state $S_\tau$ ...
+
+Formally a rule $\mathcal{R}_\tau$, for the state type $\tau$, is a transformation from a state $s \in \mathcal{S}_\tau$ onto a new set of states $\mathcal{S}_\tau' \subset \mathcal{S}_\tau$ cf. \ref{eq:Rule}.
+\begin{equation}
+	\mathcal{R}_\tau : \mathcal{S}_\tau \to \mathcal{P}(\mathcal{S}_\tau)
+	\label{eq:Rule}
+\end{equation} 
+
+The state type for analysing CCGs is a 2-tuple, where $P$ is  a totally ordered set of ..., 
+
+$$\mathcal{S}_\mathrm{CCG} : \mathcal{P}(T) \times \mathcal{P}(\mathcal{P}(T))$$
+
+\begin{equation}
+	\mathcal{R}^\mathrm{shift}_\mathrm{CCG}
+\end{equation}
+
+If all rules in the set is monotone, then the parsing will terminate 

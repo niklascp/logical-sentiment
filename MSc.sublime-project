@@ -1,0 +1,13 @@
+{
+	"folders":
+	[
+		{
+			"path": "Thesis",
+			"file_exclude_patterns": ["*.aux","*.log","*.toc","*.out","*.synctex.*","*.fdb_*"]
+		},
+		{
+			"path": "Code",
+			"file_exclude_patterns": ["*.hi","Main"]
+		}
+	]
+}

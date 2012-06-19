@@ -1,0 +1,146 @@
+%==================================================================================================
+%   THESIS TEMPLATE
+%   -------------------------
+%   This template is based upon the offcial IMM PhD Thesis template, it is enhanced with a number 
+%   of new features and a number of errors have fixed. This template is intended to be complied to 
+%   PDF using PDFLATEX and is tested using the MiKTeX 2.9 LaTeX distribution. 
+%   It is based on the official DTU-IMM Thesis template by Finn Kuno Christensen in 2009. 
+%==================================================================================================
+%
+%==================================================================================================
+% DOCUMENT SETUP
+%==================================================================================================
+\documentclass[10pt,twoside]{book}                  %Official DTU-IMM Thesis document setup
+%
+%Set to 'print' for printed version, use 'net' for online version
+\def\thesisversion{print} 			
+%
+%==================================================================================================
+% PACKAGES
+%==================================================================================================
+\usepackage{ImmThesis}                              %Import Thesis base style 
+\usepackage{named}
+\usepackage{framed}
+\usepackage[textwidth=2cm]{todonotes}
+
+\newenvironment{numquote}
+{%	
+	\par
+	\refstepcounter{equation}
+	\hspace{.5cm}
+    \begin{minipage}[c]{10cm}        	
+    	\em
+}
+{%
+	\end{minipage}
+	\hfill 	
+	(\arabic{chapter}.\arabic{equation})\\[0mm]
+}
+
+\newenvironment{cframed}[1]
+{%
+	\begin{center}	
+	\begin{minipage}[b]{#1}
+		\begin{framed}		
+}
+{%
+			\vspace{-1em}
+		\end{framed}
+	\end{minipage}	
+	\end{center}
+	\vspace{-1em}
+}
+
+
+\newcommand{\con}{\wedge}
+\newcommand{\dis}{\vee}
+\newcommand{\pr}{\rightarrow}
+\newcommand{\assign}{\leftarrow}
+\newcommand{\bsl}{\text{\textbackslash}}
+\newcommand{\cat}[1]{{\mathit{#1}}}
+\newcommand{\token}[1]{\mathbf{#1}}
+\newcommand{\inference}[3][]{
+	\dfrac{\begin{array}{c} #2 \end{array}}{\begin{array}{c} #3 \end{array}}
+	\ifthenelse{\isempty{#1}}
+	{ \: } % if #1 is empty
+	{\hspace{-6pt}\begin{array}{l}\scriptstyle{\mathbf{#1}} \\ \vspace{-11pt} \end{array} } % if #1 is not empty
+}
+
+%\setlength{\abovecaptionskip}{30pt}
+
+
+%input{PhDMacros}                                   %Thesis specific macros 
+%
+%==================================================================================================
+% THESIS PROPERTIES (Modifiy these fields with your details)
+%==================================================================================================
+\def\thesisauthor{Niklas Christoffer Petersen}      			%Author	
+\def\thesistitle{A Logical Approach to\\[8pt] Sentiment Analysis}      %Title
+\def\thesishandin{September 30}					          		%Submission date (Day-Month}
+\def\thesisyear{2012} 							          		%Submission year 
+\def\thesisnumber{????}  						          		%DTU-IMM Serial number (do not include year)
+\def\thesisISSN{0000-0000}                          %ISSN number
+\def\thesiskeywords{Keywords are, comma separated}  %PDF keywords 
+\derivethesisprops                                  %Derive dependent properties
+%
+%==================================================================================================
+% SECTION NUMBERING SETUP
+%==================================================================================================
+\setcounter{tocdepth}{2}                            %2 adds sections up to subsections
+\setcounter{secnumdepth}{3}                         %Subsubsections get a number when this is 3
+%
+%==================================================================================================
+% THESIS STRUCTURE  (Modifiy to include more chapters etc)
+%==================================================================================================
+\begin{document}
+%------------------------                                    
+%Pre-frontmatter material
+%------------------------
+\prefrontmatter
+%--------------------
+%Frontmatter material
+%--------------------
+\frontmatter
+\pagenumbering{roman}                               %Set frontmatter numbering style
+\input{SummaryUK}								             %English summary of Thesis
+\markboth{}{}                                       %Set headings (left)(right)
+\input{SummaryDK}								             %Danish summary of Thesis
+\markboth{}{}                                       %Set headings (left)(right)
+\input{Preface}								             %Preface
+\markboth{}{}                                       %Set headings (left)(right)
+\input{Acknowledgements}					             %Acknowledgements
+\markboth{}{}                                       %Set headings (left)(right)
+%------------------
+% Table of contents
+%------------------
+\newpage\mbox{}\newpage
+\chaptermark{Contents}					
+\renewcommand{\sectionmark}[1]{\markright{#1}}
+\sectionmark{Contents}
+\addtolength{\parskip}{-\baselineskip}
+\tableofcontents
+\addtolength{\parskip}{\baselineskip}
+\renewcommand{\sectionmark}[1]{\markright{\thesection\ #1}}
+%-------------
+% Main content 
+%-------------
+\mainmatter
+\include{1-Introduction}
+%\include{Chapter2}								          %Chapter 2
+\include{2-Sentiment-Analysis}
+\include{3-CCG}
+\include{Implementation}
+\appendix
+\include{Appendix1}							             %Appendix A
+%-----------
+% Backmatter
+%-----------
+\backmatter
+\chaptermark{Bibliography}
+\renewcommand{\sectionmark}[1]{\markright{#1}}
+\sectionmark{Bibliography}
+\addcontentsline{toc}{chapter}{Bibliography}        %Force addition of Bibliography to TOC
+\bibliographystyle{named}                           %Use alpha codes for references
+\bibliography{References}    	                      %Bibliography file called
+\end{document}
+% % % EOF % % %

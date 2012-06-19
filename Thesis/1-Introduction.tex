@@ -1,0 +1,149 @@
+%!TEX root = Thesis.tex
+
+\chapter{Introduction}
+
+
+In the UK, online retail sales account for over 10\% of purchases, and their growth rate is markedly outstripping store-based sales [13]. Many customers express their opinions about products through online reviews. These reviews are key for marketing intelligence since they contain valuable information. Popular products may have hundreds of reviews making it hard for the customer to find the information they require, and as a result there is a need to automatically classify this data. This can benefit both customers and manufacturers of products. Customers can see what other consumers thought about the products’, viewing the products strengths and weaknesses. Manufacturers can then see where their product falls short in order to improve it, and also they can compare their products to other competitive products
+\todo[inline]{Cite, rewrite, \textit{Sentiment Analysis of Customer Reviews ...}}
+
+Noisy unstructured text data is generated in informal settings such as online chat, emails, blogs, customer feedbacks and reviews. These texts have the potential to act as rich sources for raw inputs to market research and knowledge discovery. Since Internet is a crucial driving force in today’s world, these texts are rich pointers to the collective opinion of the global population on almost every topic.
+
+\todo[inline]{Cite, rewrite, \textit{Opinion Mining From Noisy Text Data}}
+
+Feedback, in form of product and service reviews, can thus be heigly valuable information for companies. Also political opinions are of high value for both governments and their the oppositions. The interest in such opinions is far from recent, and is a well etablished subfield of the \emph{psychometrics} and has strong scientific grounds in both psychology and statistics. 
+
+\todo[inline]{Introduce \emph{sentiment analysis} (also sometimes refered as \emph{opinion mining})}
+
+\vspace{8em}
+
+\section{Classical data collection}
+One of the most used approaches to collect data for opinion analyses is through questionnaire surveys. Most of us are familiar with such surveys, where the subject is forced to answer questions with a fixed scale. For instance, given the statement ``The rooms at the Swissôtel Hotel are of high quality.'', a subject must answer by selecting one of a predefined set of answers, e.g.\ as shown in figure \ref{fig:LikertScale}
+\begin{figure}[ht]
+	\begin{cframed}{.7\textwidth}
+		\begin{enumerate}
+		  \item Strongly disagree
+		  \item Disagree
+		  \item Neither agree nor disagree
+		  \item Agree
+		  \item Strongly agree
+		\end{enumerate}
+	\end{cframed}
+	\caption{Likert scale.}
+	\label{fig:LikertScale}
+\end{figure}
+
+Such scales, where the subject indicates the \emph{level of agreement}, are know as \emph{Likert scales}, originally presented by \citeauthor{Likert} \shortcite{Likert}, and has been one of the favourite methods of collection data for opinion analyses cf. \cite{?}. Other scales are also widely used, for instance the \emph{Guttman scale} \cite{?}, where the questions are  binary (yes/no) and ordered such that answering yes to a questions implies the answer yes to all questions ordered below this. Thus the answer on a Guttman scale can be captured by a single index. An example of an Guttman scale is shown in figure~\ref{fig:GuttmanScale}.
+\begin{figure}[ht]
+	\begin{cframed}{.7\textwidth}
+		\begin{enumerate}
+		  \item I like eating out
+		  \item I like going to restaurants
+		  \item I like going to themed restaurants
+		  \item I like going to Chinese restaurants
+		  \item I like going to Beijing-style Chinese restaurants
+		\end{enumerate}
+	\end{cframed}
+	\caption{Guttman scale.}
+	\label{fig:GuttmanScale}
+\end{figure}
+
+Given a set of answers, the result of such surveys are fairly easy to compute. At its simplest it can be an average of the answers, however mostly it is also interesting to connect the questions -- for instance how does subjects' answer to the above statement influent their answer to the statement ``The food at the Swissôtel Restaurant are of high quality.'', etc. 
+
+\todo[inline]{List some shortcommings of this approach, e.g. predefined frame for feeedback etc., it is often hard to get people to participate, etc.}
+\vspace{8em}
+
+
+
+\section{Natural language data collection}
+\label{sec:naturalDataCollection}
+In this thesis it is argued that a far more natural way for subjects to express their opinions is through their most natural communication form, i.e.\ their language, eigther in written or spoken form.
+
+The initiative for such data collection could be \emph{opinion seeking queries} as the one shown in (\ref{ex:OpinionQuery}). Such queries are intended to ensure succinct reviews that clearly relate to the \emph{entity} in question (e.g.\ product or service) with respect to a specific \emph{topic of interest}. Clearly the queries could be formulated in a more friendly and \emph{call to action} manner, as shown in (\ref{ex:OpinionQuery2})
+\begin{numquote}
+	Holiday Inn, London: price
+	\label{ex:OpinionQuery}
+\end{numquote}
+\begin{numquote}
+	What do you think about pricing at the Holiday Inn, London?
+	\label{ex:OpinionQuery2}
+\end{numquote}
+
+This method might not seem that different from that of the previously mentioned Likert scales, but it still allows the reviewer to answer with a much broader sentiment and lets the reviewer argue for his/hers answer as shown in the examples (\ref{ex:OpinionAnswer}-\ref{ex:OpinionAnswer2}).
+\begin{numquote}
+	The price is moderate for the service and the location.
+	\label{ex:OpinionAnswer}
+\end{numquote}
+\begin{numquote}
+	Overall an above average hotel based on location and price   but not one for a romantic getaway!
+	\label{ex:OpinionAnswer2}
+\end{numquote}
+
+More passive sources could also be considered, including 
+posts on social networking services and microblogging services (e.g.\ Facebook\footnote{Facebook, \url{http://www.facebook.com/}} and Twitter\footnote{Twitter, \url{http://www.twitter.com/}}). This though introduces the need for efficient candidate filtering, as the posts in general of cause are not constrained to a specific entity or topic of interest. However it also significantly increases the data quantity, which in turn can yield a more precise analysis. Since the author of the post might never realize that the post is being used for the purpose of opinion analysis it also raises ethical issues. Larger texts, such as blot posts, could also be considered, however the contextual aspects of large, contiguous texts often makes interpretation extramly complex, thus making it a most difficult task to extract opinions on a specific entity. 
+
+It is also worth mentioning the possibility to collect answers such as (\ref{ex:OpinionAnswer}, \ref{ex:OpinionAnswer2}) in spoken form, which would give perhaps the most natural interaction. However for the purpose of this thesis it is proposed to solely focus on language in written form, as spoken form introduces a lot of complexity due to the speech recognition needed, for instance efficient audio sampling and analysis, speaker dependence (e.g.\ dialects), etc. Further more the interpretation of spoken language is also highly complex, since the emotional perception of the speaker must be considered in order to detect for instance ironic statements.
+
+
+The overall goal is thus to perform a \emph{sentiment analysis} of a set of small, succint, review texts with respect to a subject, and yield an normalized score.
+
+
+\todo[inline]{Fit}
+
+We will present the problematics that arises when trying to extract the semantic of texts from a language with a large vocabulary, and present several computational approaches for solving (at least partly) these issues.
+
+\clearpage
+
+\section{Related work}
+In the following notable related work on sentiment analysis are briefly presented, and based on this it is argued that there are two main approaches for sentiment analysis of written texts, namely using \emph{formal systems} and respecitively using \emph{statistical methods}.
+
+\begin{itemize}
+	\item \textbf{Formal approaches} \ 
+	With this approach the language of the texts to analyse is modeled as a formal language, i.e.\ using a formal grammar. This allows a syntactical analysis of the texts, yielding the structures of the texts, e.g.\ sentences, phrases, and words. Semantic information is then extractable by augmenting and inspecting these structures.
+
+	The result of the semantic analysis is then subject to the actual sentiment analysis ... 
+
+	\todo[inline]{Cites}
+
+	\item \textbf{Statistical approaches} \ 
+	With a statistical approach a probabilistic model is constructed, and trained against a training data set, configuring the perameters of the model (of which there can be an tremendous amount of). The model is then applied to the actual data set of which an analysis is desired.
+
+ 	can extract features from the input text. These features can then be analyzed in order to extract semantic properties.
+
+ 	\todo[inline]{Cites: Language models, positional language model, HHM}
+\end{itemize}
+
+Both of these has been considered as the foundation of the analysis of the text reviews, however it is proposed to follow a logic approach for several reasons:
+\begin{itemize}
+  \item Given that it is a formal system, it can be modeled closely and hopefully also efficiently in the \emph{proof of concept} implementation.
+
+  \item It is questionable whether the entropy of each topic in the chosen dataset actually allows feature extraction on a significant level. Given a set of text on a topic is divided into a training set and a test set, it is doubtful that the trained model would be able to capture features from the test set, since the topics only contains approximately a hundred texts.
+
+    \item The undersigned has far more experience in the field of logic systems, than in the field of statistics, thus a higher level 
+\end{itemize}
+
+Notice that even though it is proposed to follow a logic approach, it is still the intention to retain the proposed solutions for misspellings and minor grammatical errors, which utilize some probabilistic properties, e.g.\ \emph{match scores}, etc. However these should be seen solely as preprocessing steps needed, in case the input text cannot be analyzed directly, e.g.\ as a failover precaution. Thus for perfect texts, the analysis will be purely logic. 
+
+
+\clearpage
+
+\section{Using real data sets}
+
+
+For the presented solution to be truely convincing we wish to present a \emph{proof of concept} implementation that shows at least some of the desired capabilities. However, for such product to be demonstrated properly, real data is required. Testing in on some tiny pseudo data set constructed for the sole purpose of this demonstration would not be convincing.
+
+\todo[inline]{Move to chap. 2?}
+
+%An immediate concern that arraises when dealing with real data sets is the possebility of incorrect grammar and spelling. A solution that would only work on \emph{perfect texts} (i.e.\ text with correct grammar and spelling) would not be adequate. In order to at least try to handle minor misspellings we intend to use algoritms that can select an alternative word from the system's vocabulary, if a perfect match is not possible. Reasons for this could be that word is simply unpresent from the system's vocabulary (e.g.\ misspelled), or on a grammatical incorrect form (e.g.\ wrong person, gender, tense, case, etc.). 
+
+Dealing with major grammatical errors, such as wrong word order is a much harder problem, since even small changes in for instance the relative order of subject, object, verb etc. may result in an major change in interpretation. Thus it is proposed, only to focus on minor grammatical errors such as incorrect form. Such corrections could be made achievable by linking different forms of the same word.
+
+\begin{quote}
+	Blog texts on the other hand suffer from ill-composed sentences, 
+arbitrary punctuations or insertions of characters, irrational 
+capitalization etc. Spelling correction, abbreviation and case 
+restoration mechanisms for noisy text have been addressed in [3, 
+4]. We have employed variations of these techniques for our 
+work.
+\end{quote}
+
+\todo[inline]{Should be 3-5 pages: Motivation, Project goals, and Thesis structure}

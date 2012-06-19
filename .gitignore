@@ -1,0 +1,16 @@
+*.hi
+*.o
+.DS_Store
+*.data
+Research
+Møder
+NLP
+*.aux
+*.bbl
+*.fdb_latexmk
+*.blg
+*.out
+*.log
+*.synctex.gz
+*.toc
+*.sublime-workspace
