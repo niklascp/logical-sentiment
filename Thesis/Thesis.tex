@@ -21,7 +21,12 @@
 \usepackage{ImmThesis}                              %Import Thesis base style 
 \usepackage{named}
 \usepackage{framed}
+\usepackage{enumitem}
 \usepackage[textwidth=2cm]{todonotes}
+\usepackage{tikz}
+\usetikzlibrary{arrows,automata}
+\usepackage{xifthen}
+\usepackage{rotating}
 
 \newenvironment{numquote}
 {%	
@@ -56,14 +61,33 @@
 \newcommand{\dis}{\vee}
 \newcommand{\pr}{\rightarrow}
 \newcommand{\assign}{\leftarrow}
-\newcommand{\bsl}{\text{\textbackslash}}
+
+%\newcommand{\bsl}{\text{\textbackslash}}
+\newcommand{\bsl}{\backslash}
+
 \newcommand{\cat}[1]{{\mathit{#1}}}
+\newcommand{\catvar}[1]{\makebox[1em]{$#1$}}
+\newcommand{\fvar}[1]{\makebox[8pt]{$#1$}}
 \newcommand{\token}[1]{\mathbf{#1}}
+\newcommand{\pos}[1]{\scriptstyle{\mathbf{#1}}}
+
 \newcommand{\inference}[3][]{
-	\dfrac{\begin{array}{c} #2 \end{array}}{\begin{array}{c} #3 \end{array}}
-	\ifthenelse{\isempty{#1}}
-	{ \: } % if #1 is empty
-	{\hspace{-6pt}\begin{array}{l}\scriptstyle{\mathbf{#1}} \\ \vspace{-11pt} \end{array} } % if #1 is not empty
+  \ifthenelse{\equal{#1}{T}}
+  {
+  	\begin{array}{c} 
+  		\vspace{-4pt}
+  		#2 \\
+  		\vspace{-4pt}
+  		\triangledown \\  		
+  		#3
+  	\end{array}
+  }
+  {
+  	\dfrac{\! \begin{array}{c} #2 \end{array} \!}{\! \begin{array}{c} #3 \end{array} \!}
+  	\ifthenelse{\isempty{#1}}
+  	{ \: } % if #1 is empty
+  	{\hspace{-6pt}\begin{array}{l}\scriptscriptstyle{\mathbf{#1}} \\ \vspace{-9.6pt} \end{array}} % if #1 is not empty
+  }
 }
 
 %\setlength{\abovecaptionskip}{30pt}
@@ -129,9 +153,12 @@
 %\include{Chapter2}								          %Chapter 2
 \include{2-Sentiment-Analysis}
 \include{3-CCG}
-\include{Implementation}
+\include{4-Semantic-Networks}
+\include{5-Implementation}
+\include{6-Test-Results}
+\include{7-Conclusion}
 \appendix
-\include{Appendix1}							             %Appendix A
+\include{A1-Brown}							              %Appendix A
 %-----------
 % Backmatter
 %-----------

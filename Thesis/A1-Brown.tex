@@ -1,0 +1,55 @@
+%!TEX root = Thesis.tex
+\chapter{Appendix A}
+
+\section{A naive attempt for lexicon acquisition}
+
+\subsection{The Brown Corpus}
+The Brown Corpus was compiled by \citeauthor{brown} \shortcite{brown} by collecting written works printed in United States during the year 1961. The corpus consists of just over one million words taken from 500 American English sample texts, with the intension of covering a highly representative variety of writing styles and sentence structures.
+
+Notable drawbacks of the Brown Corpus include its age, i.e.\ there are evidently review topics where essential and recurring words used in present day writing was not coined yet or rarely used back 50 years ago. For instance does the Brown Corpus not recognize the words \emph{internet}, \emph{hotspot}
+
+   sentences will containing words has found it's way into comon  that 
+
+Other corpora has been considered
+
+\section{Tokenizer and tagger}
+The tokenizer has a very simple task, namely to convert an input string to a list of tokens (lower case words) that represent the symbols of the language. An example of the transformation is shown in
+(\ref{fig:Tokenizer}).
+\begin{align}
+  &\text{``Put the pyramid onto the table.''} \to 
+  \left[ 
+  \token{put}, \token{the}, \token{pyramid}, \token{onto}, \token{the}, \token{table} 
+  \right] 
+  \label{fig:Tokenizer}
+\end{align}
+
+\subsection{Shift-reduce parser}
+\section{Find a good title}
+The initial attempt is simply to construct a parser that 
+
+\begin{quote}
+	There are three basic ways to build a shift-reduce parser. Full LR(1) (the `L' is the direction in which the input is scanned, the `R' is the way in which the parse is built, and the `1' is the number of tokens of lookahead) generates a parser with many states, and is therefore large and slow. SLR(1) (simple LR(1)) is a cut-down version of LR(1) which generates parsers with roughly one-tenth as many states, but lacks the power to parse many grammars (it finds conflicts in grammars which have none under LR(1)).
+\end{quote}
+
+\begin{quote}
+LALR(1) (look-ahead LR(1)), the method used by Happy and yacc, is tradeoff between the two. An LALR(1) parser has the same number of states as an SLR(1) parser, but it uses a more complex method to calculate the lookahead tokens that are valid at each point, and resolves many of the conflicts that SLR(1) finds. However, there may still be conflicts in an LALR(1) parser that wouldn't be there with full LR(1).
+\end{quote}
+
+The state $S_\tau$ ...
+
+Formally a rule $\mathcal{R}_\tau$, for the state type $\tau$, is a transformation from a state $s \in \mathcal{S}_\tau$ onto a new set of states $\mathcal{S}_\tau' \subset \mathcal{S}_\tau$ cf. \ref{eq:Rule}.
+\begin{equation}
+	\mathcal{R}_\tau : \mathcal{S}_\tau \to \mathcal{P}(\mathcal{S}_\tau)
+	\label{eq:Rule}
+\end{equation} 
+
+The state type for analysing CCGs is a 2-tuple, where $P$ is  a totally ordered set of ..., 
+
+$$\mathcal{S}_\mathrm{CCG} : \mathcal{P}(T) \times \mathcal{P}(\mathcal{P}(T))$$
+
+\begin{equation}
+	\mathcal{R}^\mathrm{shift}_\mathrm{CCG}
+\end{equation}
+
+If all rules in the set is monotone, then the parsing will terminate 
+

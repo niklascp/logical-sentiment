@@ -2,12 +2,27 @@
 	"folders":
 	[
 		{
-			"path": "Thesis",
-			"file_exclude_patterns": ["*.aux","*.log","*.toc","*.out","*.synctex.*","*.fdb_*"]
+			"file_exclude_patterns":
+			[
+				"*.aux",
+				"*.log",
+				"*.toc",
+				"*.out",
+				"*.synctex.*",
+				"*.fdb_*"
+			],
+			"path": "Thesis"
 		},
 		{
-			"path": "Code",
-			"file_exclude_patterns": ["*.hi","Main"]
+			"file_exclude_patterns":
+			[
+				"*.hi",
+				"Main"
+			],
+			"path": "Code"
+		},
+		{
+			"path": "/Users/ncp"
 		}
 	]
 }

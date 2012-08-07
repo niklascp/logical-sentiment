@@ -39,6 +39,14 @@
 
 % BOOKS
 
+@book{ai,
+  author = {S. J. Russell and P. Norvig},
+  publisher = {Prentice Hall},
+  title = {{Artificial Intelligence: A Modern Approach}},
+  year = {2009},
+  edition = {3rd}
+}
+
 @book{ACP3,
  author = {Knuth, Donald E.},
  title = {The Art of Computer Programming, vol. 3: Sorting and Searching},
@@ -74,7 +82,38 @@
 
 % ARTICLES : 
 
+% - TOKENIZATION
+
+@inproceedings{tokenization,
+    author = {Webster, Jonathan J. and Kit, Chunyu},
+    title = {Tokenization as the initial phase in NLP},
+    booktitle = {Proceedings of the 14th conference on Computational linguistics - Volume 4},
+    series = {COLING '92},
+    year = {1992},
+    location = {Nantes, France},
+    pages = {1106--1110},
+    numpages = {5},
+    publisher = {Association for Computational Linguistics},
+    address = {Stroudsburg, PA, USA}
+} 
+
+
+@inproceedings{freeLing,
+    author="Lluís Padró and Samuel Reese and Eneko Agirre and Aitor Soroa",
+    editor="Pushpak Bhattacharyya AND Christiane Fellbaum AND Piek Vossen",
+    title={{Semantic Services in FreeLing 2.1: WordNet and UKB}},
+    booktitle="Principles, Construction, and Application of Multilingual Wordnets",
+    publisher="Narosa Publishing House",
+    pages="99--105",
+    organization="Global Wordnet Conference 2010",
+    address="Mumbai, India",
+    year="2010",
+    month="February",
+}
+
+
 % - CCG
+
 @inproceedings{robustCCG,
     author = {Julia Hockenmaier and Gann Bierner and Jason Baldridge},
     title = {{Providing Robustness for a CCG System}},
@@ -84,7 +123,7 @@
     publisher = {}
 }
 
-@ARTICLE{ectendingCCG,
+@ARTICLE{extendingCCG,
     author = {Julia Hockenmaier and Gann Bierner and Jason Baldridge},
     title = {Extending the coverage of a CCG system},
     journal = {Journal of Language and Computation},
@@ -130,7 +169,7 @@
 }
 
 @article{tag,
-  title = "Tree adjunct grammars",
+  title = "Tree Adjunct Grammars",
   journal = "Journal of Computer and System Sciences",
   volume = "10",
   number = "1",
@@ -139,18 +178,21 @@
   author = "Aravind K. Joshi and Leon S. Levy and Masako Takahashi"
 }
 
-@phdthesis{hg, 
-  journal={PhD dissertation Stanford University Rounds WC}, 
-  author={Pollard, Carl},
-  year={1984}, 
-  pages={0}
+@phdthesis{hg,   
+  author = {Pollard, Carl},
+  title = {Generalized Context-Free Grammars, Head Grammars and Natural Language},
+  year = {1984}, 
+  school = {Stanford University}
 }
+
+% STEEDMAN
 
 @MISC{steedmanDraft,
     author = {Mark Steedman},
     title = {Categorial Grammar},
     year = {1998}
 }
+
 @Book{sp,
   author =   "Mark Steedman",
   title =  "The Syntactic Process",
@@ -159,7 +201,40 @@
   ISBN =   "0-262-69268-6"
 }
 
+@book{ts,
+  title={Taking Scope: The Natural Semantics of Quantifiers},
+  author={Mark Steedman},
+  isbn={9780262017077},
+  lccn={2011024315},
+  year={2011},
+  publisher={The MIT Press}
+}
+
+% BALDRIDGE
+
+@phdthesis{baldridgeThesis,
+  author = {Jason Baldridge},
+  title = {Lexically Specified Derivational Control in Combinatory Categorial Grammar},
+  year = {2002},
+  school = {University of Edinburgh}
+}
+
+@inproceedings{multiModalCCG,
+  author = {Baldridge, Jason and Kruijff, Geert-Jan M.},
+  title = {Multi-Modal Combinatory Categorial Grammar},
+  booktitle = {Proceedings of the tenth conference on European chapter of the Association for Computational Linguistics - Volume 1},
+  series = {EACL '03},
+  year = {2003},
+  isbn = {1-333-56789-0},
+  location = {Budapest, Hungary},
+  pages = {211--218},
+  numpages = {8},
+  publisher = {Association for Computational Linguistics},
+  address = {Stroudsburg, PA, USA},
+}
+
 % - Lexicons
+
 @article{ccgBank,
  author = {Hockenmaier, Julia and Steedman, Mark},
  title = {{CCGbank: A Corpus of CCG Derivations and Dependency Structures Extracted from the Penn Treebank}},
@@ -202,9 +277,28 @@
 @techreport{brown,
   author = {W. Nelson Francis and Henry Kucera},
   institution = {Department of Linguistics, Brown University, Providence, Rhode Island, US},
-  keywords = {corpus linguistics text-mining},
-  title = {Brown Corpus Manual},
+  title = {{Brown Corpus Manual}},
   year = 1979
 }
+
+% - SentiWordNet
+
+@inproceedings{sentiWordNet,
+    author = {Andrea Esuli and Fabrizio Sebastiani},
+    title = {{SentiWordNet: A Publicly Available Lexical Resource for Opinion Mining}},
+    booktitle = {In Proceedings of the 5th Conference on Language Resources and Evaluation (LREC’06)},
+    year = {2006},
+    publisher = {European Language Resources Association (ELRA)},
+    pages = {417--422}
+}
+
+@InProceedings{sentiWordNet3,
+  author = {Stefano Baccianella and Andrea Esuli and Fabrizio Sebastiani},
+  title = {{SentiWordNet 3.0: An Enhanced Lexical Resource for Sentiment Analysis and Opinion Mining}},
+  booktitle = {Proceedings of the Seventh International Conference on Language Resources and Evaluation (LREC'10)},
+  year = {2010},
+  publisher = {European Language Resources Association (ELRA)}
+ }
+
 
 

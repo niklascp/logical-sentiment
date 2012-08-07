@@ -1,0 +1,37 @@
+\documentclass[pdftex,a4paper,10pt]{article}
+
+% Layout 
+\usepackage[landscape]{geometry}
+\usepackage{fullpage}
+
+% Math
+\usepackage{amsmath,amssymb,latexsym,psfrag}
+
+% Graphics
+\usepackage[pdftex]{graphicx}
+
+% Misc
+\usepackage{xifthen}
+
+\newcommand{\mdoubleplus}{\ensuremath{\mathbin{+\mkern-10mu+}}}
+
+\newcommand{\bsl}{\text{\textbackslash}}
+
+\newcommand{\cat}[1]{{\mathit{#1}}}
+\newcommand{\token}[1]{\mathbf{#1}}
+\newcommand{\pos}[1]{\scriptstyle{\mathbf{#1}}}
+
+\newcommand{\inference}[3][]{
+  \dfrac{\begin{array}{c} #2 \end{array}}{\begin{array}{c} #3 \end{array}}
+  \ifthenelse{\isempty{#1}}
+  { \: } % if #1 is empty
+  {\hspace{-3pt}\begin{array}{l}\scriptscriptstyle{\mathbf{#1}} \\ \vspace{-8.9pt} \end{array} } % if #1 is not empty
+}
+
+\include{Content}
+
+\begin{document}
+\setlength{\pdfpagewidth}{30in}
+\setlength{\pdfpageheight}{5in}
+\content
+\end{document}

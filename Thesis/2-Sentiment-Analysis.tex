@@ -1,57 +1,80 @@
 %!TEX root = Thesis.tex
 
-\chapter{Logical sentiment analysis}
+\chapter{Sentiment analysis}
 
 For the purpose of this thesis a \emph{sentiment analysis} is defined as follows:
 \begin{definition}
-a sentiment analysis $\mathcal{A}$ is a computation on a review text $T \in \Sigma^\star$ with respect to a subject $s \in S$, where $\Sigma^\star$ denotes the set of all permissible texts in the language. The result is an normalized score as shown in (\ref{eq:Analysis}). The yielded score should reflect the \emph{polarity} of the subject in the text, i.e.\ whether the overall opinion is positive (a score close to $\iota$), negative (a score close to $-\iota$), or neutral (a score close to $0$).
+\todo{Should $\Sigma^\star$ be a string, and then include $\bot$ as result?}
+A sentiment analysis $\mathcal{A}$ is a computation on a review text $T \in \Sigma^\star$ with respect to a subject $s \in S$, where $\Sigma^\star$ denotes the set of all permissible texts in the language. The result is an normalized score as shown in (\ref{eq:Analysis}). The yielded score should reflect the \emph{polarity} of the subject in the text, i.e.\ whether the overall opinion is positive (a score close to $\iota$), negative (a score close to $-\iota$), or neutral (a score close to $0$).
   \begin{align}
 	 \mathcal{A}: \Sigma^\star \to S \to [-\iota;\iota]
 	 \label{eq:Analysis}
   \end{align}
 \end{definition}
 
- It should be evident that this computation is far from triviel, and constitutes the cornerstone of this thesis. There are several steps needed, if such computation should yield any reasonable result. As mentioned in the introduction the goal is a logical approach for achieving this. The following outlines the overall steps to be completed, their associated problematics in this process, and succintively presents different approaches to solve each step. The chosen approach for each step will be presented in much more details in later chapters. Finally ... \todo[inline]{Something about data acquisition of test-data}
+ It should be evident that this computation is far from trivial, and constitutes the cornerstone of this thesis. There are several steps needed, if such computation should yield any reasonable result. As mentioned in the introduction the goal is a logical approach for achieving this. The following outlines the overall steps to be completed, their associated problematics in this process, and succinctly presents different approaches to solve each step. The chosen approach for each step will be presented in much more details in later chapters. Finally ... \todo[inline]{Something about data acquisition of test-data}
 
 \clearpage
 
-\section{Syntactic analysis}
-The first step is to determine the grammatical structure of the input texts with respect to the rules of the English language. It is expected that the reader is familiar with English grammar rules and syntactic categories, including phrasal categories and lexical categories (also called parts of speech). As mentioned erlier it is essential that the chosen solution is able to cope with \emph{real} data, collected from actual review scenarios. This implies a robust syntactic analysis accepting a large vocabulary and a wide range of sentence structures. In order to calculate the actual polarity it is essential to have semantic annotations on the lexical units. It is argued that a feasible and suitable solution is to use a grammar that is \emph{lexicalized}, i.e.\ where the rules are essentially langauge independent, and the syntactic properties are derived from a lexicon. Thus the development of a lexicalized grammar is mainly a task of acquiring a sutable lexicon for the desired language.
+\section{Tokenization}
+In order the even start processing natural language texts, it is essential to be able to identify the elementary parts, i.e.\ \emph{lexical units} and \emph{punctuation marks}, that constitutes a text. However even identifying the different sentences in a text can yield a difficult task. Consider for intance the text~(\ref{ex:sentenceBoundary}) which is taken from the Wall Street Journal (WSJ) corpus \cite{wsjCorpus}. There are six periods in it, but only two of them indicates sentence bounderies, and delimits the text into its two sentences.
 
-Even though the task of syntactic analysis now is largely reduced to a task of lexicon acquisition, which will be addressed in a moment, there are still general concerns that are worth acknowledging. Simply identifying the different sentences and lexical units in a text can yield a difficult task. Consider for intance the text (\ref{ex:SentenceBoundary}) which is taken from the Wall Street Journal corpus \cite{wsjCorpus}. There are six periods in it, but only two of them indicates sentence bounderies, and delimits the passage into its two sentences.
 \begin{numquote}
   Pierre Vinken, 61 years old, will join the board as a nonexecutive director Nov. 29. Mr. Vinken is chairman of Elsevier N.V., the Dutch publishing group.  
-  \label{ex:SentenceBoundary}
+  \label{ex:sentenceBoundary}
 \end{numquote}
 
-\citeauthor{ectendingCCG}~\shortcite[p.~108-110]{ectendingCCG}\ identifies several issues in being able to efficiently handle natural language texts solely with lexicalized grammars, mainly due to the need for entries for various combinations of proper nouns, abbreviated terms, dates, numbers, etc. Instead they suggest to use pattern matching and statistical techniques as a preprocessing step, for which efficient components exists, which translate into reduced complexity for the actual syntactic analysis.
+The domain of small review texts allows some restrictions and assumptions, that at least will ease this issue. For instance it is argued that the review texts will be fairly succinct, and thus it seems like a valid assumption that they will consists of at few sentences. Its is argued that this indeed is achievable by sufficient instructing and constraining the reviewers doing data collection, e.g.\ only allowing up to a curtain number of characters. This allows sentences in such phrases to be proccesed independently (i.e.\ as two seperate review texts).
 
-Fortunately the domain of small review texts allows some restrictions and assumptions, that at least will ease some of the issues in this context. For instance it seems like a valid assumption that most of the review texts will consists of at most two sentences. Its is argued that this indeed is achievable by sufficient intructing and constraining the reviewers duing data collection, e.g.\ only allowing up to a curtain number of characters. It is also argued that the use of proper nouns and specific dates can be fairly limited, in that a context have already been established for the reviewer cf. section~\ref{sec:naturalDataCollection}. However the domain of small review texts also introduce concerns that are absent from other domains, including the possebility of incorrect grammar and spelling, since the texts comes unedited from humans with varying English skills. A solution that would only work on \emph{perfect texts} (i.e.\ texts of sentences with completely correct grammar and spelling) would not be adequate. In order to at least try to handle minor misspellings it is intended to use algoritms that can select alternatives from the lexicon. Reasons for this could be that word is simply unpresent from the system's vocabulary (e.g.\ misspelled), or on a grammatical incorrect form (e.g.\ wrong person, gender, tense, case, etc.). 
+Even with this assumption, the process of identifying the sentences, and the lexical units and punctuation marks within them, is not a trivial task. \citeauthor{tokenization} \shortcite{tokenization} criticizes the neglection of this process, as most NLP studies focus purely on analysis, and assumes this process has already been performed. Such common assumptions might derive from English being a relatively easy language to tokenize. This is due to its space marks as explicit delimiters between words, as opposed to other languages, e.g.\ Chinese which has no delimiters at all. This might hint that tokenization is very language dependent. And even though English is considered simple to tokenize, a naive approach like segmenting by the occurrence of spaces fails for the text~(\ref{ex:lexicalUnitIdentification}), which is also from the WSJ corpus, as it would yield lexical units such as ``(or'', ``perceived,'' and ``rate),''. Simply consider all groups of non-alphanumerics as punctuation marks does not work either, since this would fail for i.a.\ ordinal numbers, currency symbols, and abbreviations, e.g.\ ``Nov.'' and ``Elsevier N.V.'' in text~(\ref{ex:sentenceBoundary}). Both of these methods also fail to recognize ``Pierre Vinken'' and ``Elsevier N.V.'' as single proper noun units, which is arguably the most sane choice for such. 
 
-\subsection{Mildly context-sensitive grammars}
+\begin{numquote}
+One of the fastest growing segments of the wine market is the category of superpremiums -- wines limited in production, of exceptional quality (or so perceived, at any rate), and with exceedingly high prices.
+  \label{ex:lexicalUnitIdentification}
+\end{numquote}
+\clearpage
+
+\citeauthor{freeLing} \shortcite{freeLing} presents a framework of analytic tools, developed in the recent years, for various NLP tasks. Specially interesting is the morphological analyzer, which applies a cascade of specialized (i.e.\ language dependent) processors to solve exactly the tokenization. The most simple use pattern matching algorithms to recognize numbers, dates, quantity expressions (e.g.\ ratios, percentages and monetary amounts), etc. More advanced processing are needed for proper nouns, which relies on a two-level solution: first it applies a fast pattern matching, utilizing that proper nouns are mostly capitalized; and secondly a more advanced ... TODO Cite: (Named entity extraction using adaboost). These recognize proper nouns with accuracy of respectively 90\% and over 92\%. The analyzer also tries to identify lexical units that are composed of multiple words, e.g. proper nouns and idioms.
+
+It is thus possible, by the use of this framework, to preprocess the raw review texts collected from users, and ensure that they will be tokenized into segments that are suitable for the lexical-syntactic analysis. Thus more details on the tokenizer as regards design will not be presented.
+
+\section{Lexical-syntactic analysis}
+The syntactic analysis determines the grammatical structure of the input texts with respect to the rules of the English language. It is expected that the reader is familiar with English grammar rules and syntactic categories, including phrasal categories and lexical categories (also called parts of speech), otherwise (TODO: APPENDIX?). As mentioned erlier it is essential that the chosen solution is able to cope with \emph{real} data, collected from actual review scenarios. This implies a robust syntactic analysis accepting a large vocabulary and a wide range of sentence structures. In order to calculate the actual polarity it is essential to have semantic annotations on the lexical units. It is argued that a feasible and suitable solution is to use a grammar that is \emph{lexicalized}, i.e.\ where the rules are essentially langauge independent, and the syntactic properties are derived from a lexicon. Thus the development of a lexicalized grammar is mainly a task of acquiring a sutable lexicon for the desired language.
+
+Even though the task of syntactic analysis now is largely reduced to a task of lexicon acquisition, which will be addressed in chapter~\ref{chap:CCG}, there are still general concerns that are worth acknowledging. \citeauthor{extendingCCG}~\shortcite[p.~108-110]{extendingCCG}\ identifies several issues in being able to efficiently handle natural language texts solely with lexicalized grammars, mainly due to the need for entries for various combinations of proper nouns, abbreviated terms, dates, numbers, etc. Instead they suggest to use pattern matching and statistical techniques as a preprocessing step, for which efficient components exists, which translate into reduced complexity for the actual syntactic analysis.
+
+Even though it can be argued that the use of proper nouns and specific dates is fairly limited in review text, in that a context have already been established for the reviewer cf.\ section~\ref{sec:naturalDataCollection}, it is still 
+
+
+However the domain of small review texts also introduce concerns that are absent from other domains, including the possebility of incorrect grammar and spelling, since the texts comes unedited from humans with varying English skills. A solution that would only work on \emph{perfect texts} (i.e.\ texts of sentences with completely correct grammar and spelling) would not be adequate. In order to at least try to handle minor misspellings it is intended to use algoritms that can select alternatives from the lexicon. Reasons for this could be that word is simply unpresent from the system's vocabulary (e.g.\ misspelled), or on a grammatical incorrect form (e.g.\ wrong person, gender, tense, case, etc.). 
+
+\section{Mildly context-sensitive grammars}
 There exists formal proofs that some natural language structures requires formal power beyond \emph{context-free grammars} (CFG), i.e.\ \cite{nlpNotCFG} and \cite{nlpNotCFG2}. Thus the search for grammars with more expressive power has long been a major study within the field of computational linguistics. The goal is a grammar that is so restrive as possible, allowing efficient syntactic analysis, but still capable of capturing these structures. The class of \emph{mildly context-sensitive grammars} are conjectured to be powerful enough to model natural languages while remaining efficient with respect to syntactic analysis cf. \cite{mildlyCSG}.
 
-Different grammar formalisms from this class has been considered, including \emph{Tree Adjunct Grammar} (TAG) \cite{tag}, in its lexicalized form (LTAG), \emph{Head Grammar} (HG) \cite{hg} and \emph{Categorial Grammar} (CG) \cite{steedmanDraft}\todo{Find original 1985/1988 article}.
-It has been shown that these are all equal in expressive power by \citeauthor{theEquivalence}~\shortcite{theEquivalence}. The grammar formilism chosen for the purpose of this thesis is \emph{Combinatory Categorial Grammar} (CCG), pioneered largely by \citeauthor{sp} \shortcite{sp}. CCG adds a layer of combinatory logic onto pure CG.
+Different grammar formalisms from this class has been considered, including \emph{Tree Adjunct Grammar} (TAG) \cite{tag}, in its lexicalized form (LTAG), \emph{Head Grammar} (HG) \cite{hg} and \emph{Combinatory Categorial Grammar} (CCG) \cite{steedmanDraft}\todo{Find original 1985/1988 article}.
+It has been shown that these are all equal in expressive power by \citeauthor{theEquivalence}~\shortcite{theEquivalence}. The grammar formilism chosen for the purpose of this thesis is \emph{Combinatory Categorial Grammar} (CCG), pioneered largely by \citeauthor{sp} \shortcite{sp}. CCG adds a layer of combinatory logic onto pure Categorial Grammar, which allows an elegant and succinct formation of \emph{higher-order} logical expressions directly from the syntactical analysis. It is this capability, which is very usefull with respect to the goal of sentiment analysis, that mainly made the choice. Chapter~\ref{chap:CCG} will formally introduce the CCG in much more detail.
 
-\todo[inline]{Explain the choice of CCG}
-
-Chapter~\ref{chap:CCG} will formally introduce the CCG in much more detail.
-
-
-\subsection{Lexicon acquisition}
-As mentioned earlier, acquiring a sutable lexicon is crucial in the development of a lexicalized grammar, especially when the grammar is to accept a large vocabulary and a wide range of sentence structures.
-\clearpage
-
-There exists several wide coverage CCG lexicons, most notable \emph{CCGbank}, compiled by \citeauthor{ccgBank} \shortcite{ccgBank} by translating almost the entire Penn Treebank \cite{pennTreebank}, which contains over 4.5 million words. The result is a higly covering lexicon, with some entries having assigned over 100 different lexical categories. Unfortunately these lexicons are not free to use, and it has not been possible to fund a license.
-
-\clearpage
+\todo[inline]{CCG IS LOGICAL!!! - i.e. is uses combinatory logic}
 
 \section{Semantic analysis}
+The overall process of semantic analysis of a text in the context of sentiment analysis is to identify the polarity of the subjects appearing in the text. The approach is to \emph{annotate} the lexical units of adjectives and adverbs with suitable polarities, and then fold these onto the phrasal structures, yielded by the syntactical analysis, in order to identify the bindings of these polarities, i.e.\ which subjects they modify directly or indirectly.
 
+There exists datasets that tries to bind a general polarity to each \todo{adj?}word in a lexicon, e.g.\ \cite{sentiWordNet} and \cite{sentiWordNet3}. While such might be fine for very general sentiment analyses, it is argued that better results can be achieved by using a context specific annotation. For instance the adjective ``huge'' might be considered positive for a review describing rooms at a hotel, while negative for a review  describing cell phones. 
 
+As already mentioned, the use of a lexicalized syntactic analysis allows the annotation to appear directly on the entries in the lexicon. However, a manual annotation of a large lexicon is evidently not a feasible approach. Furthermore the solution must also be generic enough so it can be applied to different review contexts with minimum efforts. The concept of \emph{semantics networks}, as 
+\cite[p.~454--456]{ai}
+\subsection*{Semantic networks}
+A semeantic network is ...
+\begin{quote}
+  A semantic network, or frame network, is a network which represents semantic relations between concepts. This is often used as a form of knowledge representation. It is a directed or undirected graph consisting of vertices, which represent concepts, and edges.[1]
+\end{quote}
 
-\subsection{Using real data-sets}
+Adjectives 
+
+Adverbs
+- intensifiers (very)
+
+\subsection*{Using real data-sets}
 
 \clearpage
 
@@ -61,18 +84,11 @@ There exists several wide coverage CCG lexicons, most notable \emph{CCGbank}, co
 \section{Data acquisition}
 In order to sucesfully perform the proposed computation, and thus the sentiment analysis 
 
-\section{Tagged corpora / Part-of-speech tagging}
+\section*{Tagged corpora / Part-of-speech tagging}
 
 Since English is 
 
-\subsection{The Brown Corpus}
-The Brown Corpus was compiled by \citeauthor{brown} \shortcite{brown} by collecting written works printed in United States during the year 1961. The corpus consists of just over one million words taken from 500 American English sample texts, with the intension of covering a highly representative variety of writing styles and sentence structures.
 
-Notable drawbacks of the Brown Corpus include its age, i.e.\ there are evidently review topics where essential and recurring words used in present day writing was not coined yet or rarely used back 50 years ago. For instance does the Brown Corpus not recognize the words \emph{internet}, \emph{hotspot}
-
-   sentences will containing words has found it's way into comon  that 
-
-Other corpora has been considered
 
 \begin{quote}
   \it As with English around the world, the English language as used in the United Kingdom and the Republic of Ireland is governed by convention rather than formal code: there is no equivalent body to the Académie française or the Real Academia Española, and the authoritative dictionaries (for example, Oxford English Dictionary, Longman Dictionary of Contemporary English, Chambers Dictionary, Collins Dictionary) record usage rather than prescribe it. In addition, vocabulary and usage change with time; words are freely borrowed from other languages and other strains of English, and neologisms are frequent.
@@ -81,7 +97,7 @@ Other corpora has been considered
  
 \section{Test dataset}
 
-\subsection{The Opinosis Dataset}
+\subsection*{The Opinosis Dataset}
 The suggested data set to use is the \emph{Opinosis Dataset}, originally used by \cite{Opinosis}. The data set consists of texts from actual user reviews on a total of 51 different topics. The topics are ranging over different objects, from consumer electronics (e.g.\ GPS navigation, music players, etc.) to hotels, restaurants and cars. For most of the objects, reviews are covered by multiple topics. For instance a specific car is covered by the topics \emph{comfort}, \emph{interior}, \emph{mileage}, \emph{performance}, and \emph{seats}.
 
 It has been hard to find any real alternatives for the \emph{Opinosis Dataset} for several reasons: Most collected reviews are commercial, and thus not free to use; furthermore the \emph{Opinosis Dataset} also contains summerized texts for each of its topics, which are constructed by manual, human interpretation. The latter allow a straight approach for comparison of any results the proposed system will yield.\\
