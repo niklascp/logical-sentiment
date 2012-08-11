@@ -60,8 +60,9 @@ The output from the C\&C toolchain can be printed in various formats, including 
 	\label{fig:candcOutput}
 \end{figure}
 
-Clearly, deductions in the style previously presented is trivially obtained by substituting the axioms placeholders with the lexicon entries associated. The C\&C toolchain also has a build-in morphological analyzer which allow the lexicon to provide the \emph{lemma} of the tokens. This will be convenient later. Furthermore the lexicon also provide the POS-tag of the token which also will prove itself useful.
+Clearly, deductions in the style previously presented is trivially obtained by substituting the axioms placeholders with the lexicon entries associated. The C\&C toolchain also has a build-in morphological analyzer which allow the lexicon to provide the \emph{lemma} of the tokens. This will be convenient later. Furthermore the lexicon also provide the POS-tag\footnote{Since the C\&C models are trained on CCGBank, which in turn are a translation of The Penn Treebank (PTB), the POS-tag-set used is equivalent to that of PTB.} of the token which also will prove itself useful.
 
+There are however one essential component missing from the lexicon, namely the semantic expressions.
 \clearpage
 
 \section{Calculating sentiment values}
