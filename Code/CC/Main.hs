@@ -25,63 +25,70 @@ data AnnotationEnv = AnnotationEnv {
 }
 
 isDet pos    = pos == "DT"
-isConj pos    = pos == "CC"
 isAdj pos    = (take 2 pos) == "JJ"
 isVerb pos   = (take 2 pos) == "VB"
 isAdverb pos = (take 2 pos) == "RB"
 isNoun pos   = (take 2 pos) == "NN" || pos == "PRP"
+isP pos   = pos == "IN" || pos == "TO"
 
--- TODO: It is not succicient to check args
 annotateDet env w@(Word { category = c, token = t, lemma = l })
-  | args c == 0 = w { lTerm = LFun l 0 [] } -- Simple determiner 
-  | args c == 1 = w { lTerm = lid } -- Simple determiner 
-  | args c == 2 = w { lTerm = lid } -- Simple determiner 
-  | args c == 3 = w { lTerm = LAbs "x" $ LAbs "f" $ LApp (LVar "f") (LVar "x") } -- Complex determiner 
+  | c =? NP [] :/ N [] =
+    w { lTerm = lid } 
+  | otherwise = 
+    annotateAny env w
 
 annotateNoun env w@(Word { category = c, token = t, lemma = l })
-  | args c == 0 = w { lTerm = (LFun l 0 []) } -- Simple noun
-  | args c == 1 = w { lTerm = (LAbs "x" $ LSeq [LFun l 0 [], LVar "x"]) } -- Part of multi lexical noun  
-  | otherwise         = trace ("Could not annotate noun: " ++ t) (annotateAny env w)
-
+  | c =? N [] :/ N [] = 
+    w { lTerm = (LAbs "x" $ LSeq [LFun l 0 0 [], LVar "x"]) } -- Part of multi lexical noun  
+  | otherwise         = 
+    annotateAny env w
 
 annotateVerb env w@(Word { category = c, token = t, lemma = l })
-  | args (arg c) == 1 = w { lTerm = (LAbs "x" $ LVar "x") }
-  -- | args c == 3       = w { lTerm = (LAbs "x" $ LAbs "y" $ LAbs "f" $ LFun l 0 [LApp (LVar "f") (LVar "x"), LApp (LVar "f") (LVar "y")]) } -- Ditransitive verb
-  | otherwise         = annotateAny env w
-  -- | args c == 1       = w { lTerm = (LAbs "x" $ LFun l 0 [LVar "x"]) }
-  -- | args c == 2       = w { lTerm = (LAbs "x" $ LAbs "y" $ LFun t 0 [LVar "x", LVar "y"]) }
-  -- | args c == 3       = w { lTerm = (LAbs "x" $ LAbs "y" $ LAbs "z" $ LFun t 0 [LVar "x", LVar "y", LVar "z"]) }
-  -- | otherwise         = error "No verb should yield more than binary expressions." 
+  | c =? (S [SDcl] :\ NP []):/(S [SAdj] :\ NP []) =
+    w { lTerm = lid } -- Linking verb
+  | otherwise = 
+    annotateAny env w
 
-
-annotateAdj env w@(Word { token = t, category = c, lemma = l })
-  | args c   == 1 = let query = (let ?wne = (wnEnv env) in search l Adj AllSenses)
-                        value = (adjFun env) $ catMaybes $ map (flip Map.lookup $ adjMap env) query
-                    in  w { lTerm = (LAbs "x" $ LAdd (LVar "x") value) }
-  | otherwise     = w { lTerm = (LAbs "x" $ LVar "x") } -- error "No adjective should yield more than unary expressions."
-
+annotateAdj env w@(Word { token = t, category = c, lemma = l }) 
+  | otherwise = -- TODO: Do we need any check?
+    let query = (let ?wne = (wnEnv env) in search l Adj AllSenses)
+        value = (adjFun env) $ catMaybes $ map (flip Map.lookup $ adjMap env) query
+    in  w { lTerm = (LAbs "x" $ LAdd (LVar "x") value) }
+--  | otherwise =
+--    annotateAny env w
 
 annotateAdverb env w@(Word { token = t, category = c, lemma = l })
-  | args c == 2 = let -- Try to lookup adjective pertainyms
-                      query = (let ?wne = (wnEnv env) in filter ((==) Adj . srPOS) $ concat $ map (relatedBy Pertainym) (search l Adv AllSenses))                      
-                      value = (adjFun env) $ catMaybes $ map (flip Map.lookup $ adjMap env) query
-                  in case value of
-                      0 -> w { lTerm = (LAbs "x" $ LVar "x") } -- TODO: fallback to simpy adverb reduction to adj?
-                      x -> w { lTerm = (LAbs "x" $ LAdd (LVar "x") $ x) }
-                      
-  | otherwise   = w { lTerm = (LAbs "x" $ LVar "x") } -- error "No adverb should yield more than binary expressions."
+  | arg c =? res c = 
+    let -- Try to lookup adjective pertainyms
+        query = (let ?wne = (wnEnv env) in filter ((==) Adj . srPOS) $ concat $ map (relatedBy Pertainym) (search l Adv AllSenses))                      
+        value = (adjFun env) $ catMaybes $ map (flip Map.lookup $ adjMap env) query
+    in  case value of
+          0 -> w { lTerm = (LAbs "x" $ LVar "x") } -- TODO: fallback to simpy adverb reduction to adj?
+          x -> w { lTerm = (LAbs "x" $ LAdd (LVar "x") $ x) }
+  | otherwise =
+    annotateAny env w
 
-annotateAny env w@(Word { token = t, category = c, lemma = l }) =
-  w { lTerm = constructTerm [] c }
+annotateAny _ w@(Word { token = t, category = c, lemma = l }) =
+  w { lTerm = constructTerm xyzVars [] c }
   where 
-    newVar used = head $ dropWhile (`elem` used) $ xyzVars
-    constructTerm :: [String] -> Category -> LTerm
-    constructTerm used c = case c of
-      a :\ _ -> let v = newVar used in LAbs v (constructTerm (v:used) a)
-      a :/ _ -> let v = newVar used in LAbs v (constructTerm (v:used) a)
-      _      -> LFun l 0 $ map LVar $ reverse used
+    constructTerm :: [String] -> [(LTerm, Category)] -> Category -> LTerm
+    constructTerm vs ts c = case c of
+      r :\ a -> constructAbstraction vs ts a r
+      r :/ a -> constructAbstraction vs ts a r
+      _      -> LFun l 0 0 $ reverse $ map fst $ ts
 
--- annotateConj env (Word token pos cat expr) 
+    constructAbstraction :: [String] -> [(LTerm, Category)] -> Category -> Category -> LTerm
+    constructAbstraction (v:vs) ts a r =
+      let t = LVar v -- NP
+          tsArg = filter (\(_, t) -> (Just a) =? arg t) ts -- types where a migth be used as argument
+          tsFun = filter (\(_, t) -> arg a =? (Just t)) ts -- types where a migth be used as function
+          term = if (not(null(tsArg))) then map (\(t', c') -> if arg c' =? Just a then (LApp t' t, fromJust $ res c') else (t', c')) ts else
+                 if (not(null(tsFun))) then map (\(t', c') -> if Just c' =? arg a then (LApp t t', fromJust $ res a) else (t', c')) ts else
+                 (t,a):ts
+                 
+      in 
+        LAbs v (constructTerm vs (term) r) 
+
 
 annotateWord :: AnnotationEnv -> Word -> Word
 annotateWord env w@(Word { pos = pos })
@@ -90,22 +97,10 @@ annotateWord env w@(Word { pos = pos })
   | isVerb pos = annotateVerb env w
   | isAdverb pos = annotateAdverb env w
   | isNoun pos = annotateNoun env w
-  | isConj pos = annotateAny env w
+  | isP pos = annotateAny env w
   | otherwise  = annotateAny env w
 
-mai2 :: IO ()
-mai2 = do let term = LAbs "x" $ LAbs "y" $ LFun "tes" 0 [LVar "x", LVar "y"]
-          print $ foldr (flip LApp) term (reverse [LVar "k", LVar "j"])
-          return ()
 
-mai3 :: IO ()
-mai3 = do wne <- initializeWordNetWithOptions Nothing Nothing
-          
-          baseForm <- P.excLookup wne "harder" Adv
-
-          print $ fromJust baseForm
-
-          return ()
 
 main :: IO ()
 main = do wne <- initializeWordNetWithOptions Nothing Nothing
@@ -146,7 +141,7 @@ main = do wne <- initializeWordNetWithOptions Nothing Nothing
           let sentence = "Harry gave Louise a flower"
           let sentence = "The service that the hotel provides" -- relative clause
           let sentence = "the hotel had daily a large buffet with delicious food" -- <Bx rule
-          let sentence = "I Ed think that saw Ann"
+          let sentence = "the hotel had an exceptional service"
 
           -- putStr $ "Loading reviews...\n"
           -- reviewData <- readFile "../Data/rooms_swissotel_chicago.txt.data" 
@@ -166,8 +161,15 @@ main = do wne <- initializeWordNetWithOptions Nothing Nothing
           -- let sentence = "The concierge and service line were both just okay ." -- long term dependency
           -- let sentence = "The ideal location coupled with great service and beautiful rooms makes for a wonder stay ."
 
+          -- - IN
+          -- let sentence = "The hotel was clean and the room was decent in size"  
+          -- let sentence = "the internet service is reliable and fast and the desk in the room is large" -- large modifies "desk" correctly
+          -- let sentence = "room service was expensive in the hotel ."
+          -- let sentence = "Service was excellent and housing came as soon as asked ."
+          let sentence = "We found the service to be fine for our needs" -- LONG DISTANVE - GOOD!
+
           -- COUNTER EXAMPLES: Eg. negative sentences, are rated positive vice-verse
-          
+          -- let sentence = "You can get better customer service elsewhere for much less ."
 
           -- EXAMPLES OF ABUIGITY:
           -- let sentence = "mediocre room and service for a very extravagant price ." -- service is however not infected by mediocre
@@ -180,29 +182,19 @@ main = do wne <- initializeWordNetWithOptions Nothing Nothing
           -- let sentence = "no robes in the rooms , ice machines are not on every floor , no turn down service at night , and when housekeeping did come , they did not replace the shower gel we had used which was totally empty ."
           -- let sentence = "even with the amount we saved on the room , we could not justify spending the amount they listed for room service ."
           -- let sentence = "I will not be staying here again until I hear that they have upgraded this service ."
-          
-          
-
+                  
           -- DATA SET SUCKS
           -- let sentence = "The service truly was above and beyond ." -- wrong word order.
 
           
 
-          -- PROBLEMS:
-          -- IN
-          -- let sentence = "The hotel was clean and the room was decent in size"  
-          -- let sentence = "building is shaped like a triangle"          
-          -- let sentence = "the internet service is reliable and fast and the desk in the room is large" -- large modifies "in" instead of "desk"
-          -- let sentence = "Room service was expensive in the hotel ."
-          -- let sentence = "Service was excellent and housing came as soon as asked ."
+          -- FUNNY:
+          -- - IN:          
           -- let sentence = "They have demonstrated a wonderful ability to deliver consistent service and go above and beyond ."
-          -- let sentence = "You can get better customer service elsewhere for much less ."
-
-          -- WHEN
-          -- let sentence = "Concierge service was fine when we needed our boarding pass printed ."
           
-          -- TO
-          -- let sentence = "We found the service to be fine for our needs ."
+          -- WHEN w-XX
+          -- let sentence = "One thing that really impressed us was the excellent housekeeping service ."
+          -- let sentence = "Concierge service was fine when we needed our boarding pass printed ."
           
           -- NEGATION
           -- We ordered room service for breakfast and were not disappointed .
@@ -216,11 +208,12 @@ main = do wne <- initializeWordNetWithOptions Nothing Nothing
           -- VALUES
           -- let sentence = "free internet in the lobby but none of any sort in the rooms" - Free is 0 ?
           -- let sentence = "very impressed with rooms and view" - impressed is 0 ?
-
-          -- Determiners
+          -- let sentence = "beautiful hotel , service slightly lacking ."
+          
+          -- Determiners : GOOD GOOD GOOD !!!
           -- let sentence = "the rooms were cleaned spic and span every day" -- every, also funny spic
 
-          -- let sentence = "beautiful hotel , service slightly lacking ."
+          
 
 
           -- IN PROGRESS:
@@ -245,7 +238,7 @@ main = do wne <- initializeWordNetWithOptions Nothing Nothing
 
           
           
-          -- let sentence = "One thing that really impressed us was the excellent housekeeping service ."
+          
           t <- runCC (annotateWord env) sentence
           latexify t
 

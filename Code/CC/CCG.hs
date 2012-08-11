@@ -1,16 +1,16 @@
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
 module CCG (
+  module Unification,
   module Lambda,
   module CCG
 ) where
 
+import Unification
 import Lambda
 import Pretty
 
 type Token = String   -- Lexical entry
-
 type Lemma = String   -- Lemma of lexical entry
-
 type Pos = String     -- Part of spearch
 
 data Word = Word { 
@@ -56,21 +56,17 @@ data PTree = PWord Word
            | PNounRaise Category LTerm PTree 
            deriving (Eq,Show)
 
-isN :: Category -> Bool
-isN (N _) = True
-isN _     = False
-
-isNP :: Category -> Bool
-isNP (NP _) = True
-isNP _      = False
-
-isS :: Category -> Bool
-isS (S _) = True
-isS _     = False
-
--- isConj :: Category -> Bool
--- isConj (CONJ _) = True
--- isConj _        = False
+instance Unifiable Category where
+  S _           =? S _            = True
+  N _           =? N _            = True
+  NP _          =? NP _           = True
+  PP _          =? PP _           = True
+  CONJ _        =? CONJ _         = True
+  Punctuation _ =? Punctuation _  = True
+  Comma _       =? Comma _        = True
+  (a :/ b)      =? (a' :/ b')     = a =? a' && b =? b'
+  (a :\ b)      =? (a' :\ b')     = a =? a' && b =? b'
+  _             =? _              = False
 
 isComplex :: Category -> Bool
 isComplex (S _)           = False
@@ -92,10 +88,15 @@ agreement (Punctuation a) = a
 agreement (Comma a)       = a
 agreement _      = error "Cannot extract agreement from non-atomic category."
 
-arg :: Category -> Category
-arg (_:\x) = x
-arg (_:/x) = x
-arg x      = x 
+arg :: Category -> Maybe Category
+arg (_:\x) = Just x
+arg (_:/x) = Just x
+arg x      = Nothing 
+
+res :: Category -> Maybe Category
+res (x:\_) = Just x
+res (x:/_) = Just x
+res _      = Nothing 
 
 args :: Category -> Int
 args (x:\_) = 1 + (args x)
@@ -141,11 +142,12 @@ instance Show Category where
 
 
 -- LaTeX "printing" of data structures
+
 includePOS :: Bool
 includePOS = False
 
 includeLambda :: Bool
-includeLambda = False
+includeLambda = True
 
 includeAgreement :: Bool
 includeAgreement = False

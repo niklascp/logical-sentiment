@@ -115,7 +115,7 @@ annotateConj cat w@(Word { lemma = l }) =
     constructTerm used c = case c of
       a :\ _ -> let v = newVar used in LAbs v (constructTerm (v:used) a)
       a :/ _ -> let v = newVar used in LAbs v (constructTerm (v:used) a)
-      _      -> LSeq $ map (\term -> foldr (flip LApp) term $ reverse $ map LVar used) [LVar "x", LVar "y"]
+      _      -> LSeq $ map (\term -> foldr (flip LApp) term $ map LVar used) [LVar "x", LVar "y"]
 
 
 flatten :: Category -> [Category]
@@ -233,7 +233,7 @@ pWord l = do (string "lf(")
              return $ PWord (l !! ((read wordIndex :: Int) - 1))
 
 pToken :: Parser String
-pToken = many1 $ upper <|> lower <|> digit <|> oneOf "-$,."
+pToken = many1 $ upper <|> lower <|> digit <|> oneOf "_-$,."
 
 pParens :: Parser a -> Parser a
 pParens = between (char '(') (char ')')
