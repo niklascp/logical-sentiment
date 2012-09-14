@@ -26,7 +26,7 @@ unfoldGManyST adj seeds =
                               Just v  -> return v
                               Nothing -> do v <- allocVertex vertexRef   -- Get next vetex
                                             memTabBind n v mtab          -- Update map
-                                            let ns' = if d < 3 then adj n else []              -- Get adjancent nodes 
+                                            let ns' = adj n              -- Get adjancent nodes 
                                             ws <- mapM (visit $ d + 1) ns' -- Visit adjancent nodes 
                                             let res = ((v, n), [(v,w,1) | w <- ws])
                                             modifySTRef allNodes (res:)

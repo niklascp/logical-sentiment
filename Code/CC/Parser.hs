@@ -46,7 +46,7 @@ pLexiconEntry = do (string "w(")
                    (string "', '")
                    c <- pCategoryExpr
                    (string "').")
-                   return $ Word t lemma pos c (LVar "?")
+                   return $ Word t lemma pos c (Var "?")
 
 pTree :: Lexicon -> Parser PTree
 pTree l = do (string "ccg(")
@@ -57,12 +57,12 @@ pTree l = do (string "ccg(")
              return t
 
 pSubtree :: Lexicon -> Parser PTree
-pSubtree l = do     try (pBRule l "fa" $ \c t1 t2 -> PFwdApp  c (reduce $ LApp (term t1) (term t2)) t1 t2 )
-                <|> try (pBRule l "ba" $ \c t1 t2 -> PBwdApp  c (reduce $ LApp (term t2) (term t1)) t1 t2 )                
-                <|> try (pBRule l "fc" $ \c t1 t2 -> PFwdComp c (reduce $ LAbs "x" $ LApp (term t1) (LApp (term t2) (LVar "x"))) t1 t2 )
-                <|> try (pBRule l "bc" $ \c t1 t2 -> PBwdComp c (reduce $ LAbs "x" $ LApp (term t2) (LApp (term t1) (LVar "x"))) t1 t2 )
-                <|> try (pBRule l "bx" $ \c t1 t2 -> PBwdXComp c (reduce $ LAbs "x" $ LApp (term t2) (LApp (term t1) (LVar "x"))) t1 t2 )
-                <|> try (pURule l "tr" $ \c t     -> PFwdTR   c (reduce $ LAbs "f" (LApp (LVar "f") $ term t)) t )
+pSubtree l = do     try (pBRule l "fa" $ \c t1 t2 -> PFwdApp   c (reduce $ App (term t1) (term t2)) t1 t2 )
+                <|> try (pBRule l "ba" $ \c t1 t2 -> PBwdApp   c (reduce $ App (term t2) (term t1)) t1 t2 )                
+                <|> try (pBRule l "fc" $ \c t1 t2 -> PFwdComp  c (reduce $ Abs "x" $ App (term t1) (App (term t2) (Var "x"))) t1 t2 )
+                <|> try (pBRule l "bc" $ \c t1 t2 -> PBwdComp  c (reduce $ Abs "x" $ App (term t2) (App (term t1) (Var "x"))) t1 t2 )
+                <|> try (pBRule l "bx" $ \c t1 t2 -> PBwdXComp c (reduce $ Abs "x" $ App (term t2) (App (term t1) (Var "x"))) t1 t2 )
+                <|> try (pURule l "tr" $ \c t     -> PFwdTR    c (reduce $ Abs "f" (App (Var "f") $ term t)) t )
                 <|> try (pConj l)
                 <|> try (pConj' l)
                 <|> try (pConj'' l)
@@ -91,31 +91,16 @@ pBRule l f r = do (string f)
                   t2 <- pSubtree l
                   (string ")")
                   return $ r c t1 t2
--- Special binary rule of commas and 
-pBRule2 :: Lexicon -> String -> (Category -> Category -> PTree -> PTree -> PTree) -> Parser PTree
-pBRule2 l f r = do (string f)
-                   (string "('")
-                   t <- pToken
-                   (string "','")
-                   c1 <- pCategoryExpr
-                   (string "','")
-                   c2 <- pCategoryExpr
-                   (string "',")
-                   t1 <- pSubtree l
-                   (string ",")
-                   t2 <- pSubtree l
-                   (string ")")
-                   return $ r c1 c2 t1 t2
 
 annotateConj cat w@(Word { lemma = l }) =
-  w { lTerm = LAbs "x" $ LAbs "y" $ constructTerm [] cat }
+  w { expr = Abs "x" $ Abs "y" $ constructTerm [] cat }
   where 
     newVar used = head $ dropWhile (`elem` used) $ (iterate (++ "'") "z")
-    constructTerm :: [String] -> Category -> LTerm
+    constructTerm :: [String] -> Category -> SExpr
     constructTerm used c = case c of
-      a :\ _ -> let v = newVar used in LAbs v (constructTerm (v:used) a)
-      a :/ _ -> let v = newVar used in LAbs v (constructTerm (v:used) a)
-      _      -> LSeq $ map (\term -> foldr (flip LApp) term $ map LVar used) [LVar "x", LVar "y"]
+      a :\ _ -> let v = newVar used in Abs v (constructTerm (v:used) a)
+      a :/ _ -> let v = newVar used in Abs v (constructTerm (v:used) a)
+      _      -> Seq $ map (\term -> foldr (flip App) term $ map Var used) [Var "x", Var "y"]
 
 
 flatten :: Category -> [Category]
@@ -131,15 +116,15 @@ annotateConj' w@(Word { lemma = l, category = c }) =
   in
     case length f of
       1 -> error "Annotate Conj: We espect least t -> t."
-      2 -> w { lTerm = lid }  -- Dummy conjection, just return identity, for instance , and . in "funny , and happy ."
-      _ -> w { lTerm = LAbs "x" $ LAbs "y" $ constructTerm [] c2 }     
+      2 -> w { expr = lid }  -- Dummy conjection, just return identity, for instance , and . in "funny , and happy ."
+      _ -> w { expr = Abs "x" $ Abs "y" $ constructTerm [] c2 }     
   where 
     newVar used = head $ dropWhile (`elem` used) $ zVars
-    constructTerm :: [String] -> Category -> LTerm
+    constructTerm :: [String] -> Category -> SExpr
     constructTerm used c = case c of
-      a :\ _ -> let v = newVar used in LAbs v (constructTerm (v:used) a)
-      a :/ _ -> let v = newVar used in LAbs v (constructTerm (v:used) a)
-      _      -> LSeq $ map (\term -> foldr (flip LApp) term $ reverse $ map LVar used) [LVar "x", LVar "y"]
+      a :\ _ -> let v = newVar used in Abs v (constructTerm (v:used) a)
+      a :/ _ -> let v = newVar used in Abs v (constructTerm (v:used) a)
+      _      -> Seq $ map (\term -> foldr (flip App) term $ reverse $ map Var used) [Var "x", Var "y"]
 
 
 pConj :: Lexicon -> Parser PTree
@@ -159,7 +144,7 @@ pConj l = do (string "conj")
                          PWord w   -> PWord $ annotateConj c1 $ w { category = (c1 :\ c1) :/ c1 }
                          otherwise -> error "Left child of a conjunction should be a word?"
                  
-             return $ PFwdApp c2 (reduce $ LApp (term t1') (term t2)) t1' t2
+             return $ PFwdApp c2 (reduce $ App (term t1') (term t2)) t1' t2
 
 -- TODO : REWRITE THESE PUNCTIATION RULES
 
@@ -180,7 +165,7 @@ pConj' l = do (string "lp")
                           PWord w   -> PWord $ annotateConj c1 $ w { category = (c1 :\ c1) :/ c1 }
                           otherwise -> error "Left child of a conjunction should be a word?"
                   
-              return $ PFwdApp c2 (reduce $ LApp (term t1') (term t2)) t1' t2
+              return $ PFwdApp c2 (reduce $ App (term t1') (term t2)) t1' t2
 
 pConj''' :: Lexicon -> Parser PTree
 pConj''' l = do (string "lp")
@@ -195,7 +180,7 @@ pConj''' l = do (string "lp")
                             PWord w   -> PWord $ annotateConj' $ w { category = c :/ c }
                             otherwise -> error "Left child of a conjunction should be a word?"
                     
-                return $ PFwdApp c (reduce $ LApp (term t1') (term t2)) t1' t2
+                return $ PFwdApp c (reduce $ App (term t1') (term t2)) t1' t2
 
 pConj'' :: Lexicon -> Parser PTree
 pConj'' l = do (string "rp")
@@ -210,7 +195,7 @@ pConj'' l = do (string "rp")
                            PWord w   -> PWord $ annotateConj' $ w { category = c :\ c }
                            otherwise -> error "Left child of a conjunction should be a word?"
                    
-               return $ PBwdApp c (reduce $ LApp (term t2') (term t1)) t1 t2'
+               return $ PBwdApp c (reduce $ App (term t2') (term t1)) t1 t2'
 
 pLex :: Lexicon -> Parser PTree
 pLex l = do (string "lex('")
@@ -245,12 +230,13 @@ pCategoryExpr :: Parser Category
 pCategoryExpr = buildExpressionParser pCategoryOpTable pCategory
 
 pCategoryOpTable :: OperatorTable Char st Category
-pCategoryOpTable = [ [op "/"  (:/) AssocLeft], 
-                     [op "\\" (:\) AssocLeft] ]
-                   where op s f assoc = Infix ( do string s; return f ) assoc
+pCategoryOpTable = [ [ op "/"  (:/) AssocLeft, 
+                       op "\\" (:\) AssocLeft ] ]
+                   where 
+                     op s f a = Infix ( string s >> return f ) a
 
 pCategory :: Parser Category
-pCategory =     pParens pCategoryExpr
+pCategory =         pParens pCategoryExpr
             <|>     (pCategory' "S"     S)
             <|> try (pCategory' "NP"    NP)
             <|>     (pCategory' "N"     N)
@@ -258,7 +244,6 @@ pCategory =     pParens pCategoryExpr
             <|>     (pCategory' "conj"  CONJ)
             <|>     (pCategory' "."     Punctuation)
             <|>     (pCategory' ","     Comma)
-            -- <|> try (pCategory' "CONJ" CONJ
             <?> "category" 
 
 pCategory' :: String -> (Agreement -> Category) -> Parser Category
@@ -275,11 +260,12 @@ pFeature =     try (string "dcl"   >> return SDcl )
            <|> try (string "pt"    >> return SPt  )
            <|> try (string "nb"    >> return SNb  )
            <|> try (string "ng"    >> return SNg  )
+           <|> try (string "em"    >> return SEm  )
            <|> try (string "inv"   >> return SInv )
            <|> try (string "pss"   >> return SPss )
            <|> try (string "b"     >> return SB   )
            <|> try (string "to"    >> return To   )
-           <|> ( do { v <- many1 upper; return $ Var v } )
+           <|> ( do { v <- many1 upper; return $ Unknown v } )
            <?> "feature"
 
 parseLexicon :: String -> Lexicon

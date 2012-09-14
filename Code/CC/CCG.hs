@@ -18,9 +18,12 @@ data Word = Word {
               lemma :: Lemma,
               pos :: Pos,
               category :: Category, 
-              lTerm :: LTerm 
+              expr :: SExpr 
             }
             deriving (Eq)
+
+infix 9 :/  -- Forward slash operator
+infix 9 :\  -- Backward slash operator
 
 type Agreement = [Feature]
 
@@ -42,18 +45,18 @@ data Feature = Masc  | Fem  | Neutr | MascOrFem   -- Gender
              | Pers  | Refl | Wh
              | Tense | Infl
              | On    | With | By | To | From      -- Preposition
-             | SDcl  | SAdj | SNb  | SNg  | SPt | SInv | SPss | SB    -- Sentence Type
-             | Var String
+             | SDcl  | SAdj | SNb  | SNg  | SPt | SInv | SPss | SB | SEm   -- Sentence Type
+             | Unknown String
              deriving (Eq,Show)
 
 data PTree = PWord Word
-           | PFwdApp Category LTerm PTree PTree 
-           | PBwdApp Category LTerm PTree PTree 
-           | PFwdComp Category LTerm PTree PTree 
-           | PBwdComp Category LTerm PTree PTree 
-           | PBwdXComp Category LTerm PTree PTree 
-           | PFwdTR Category LTerm PTree 
-           | PNounRaise Category LTerm PTree 
+           | PFwdApp Category SExpr PTree PTree 
+           | PBwdApp Category SExpr PTree PTree 
+           | PFwdComp Category SExpr PTree PTree 
+           | PBwdComp Category SExpr PTree PTree 
+           | PBwdXComp Category SExpr PTree PTree 
+           | PFwdTR Category SExpr PTree 
+           | PNounRaise Category SExpr PTree 
            deriving (Eq,Show)
 
 instance Unifiable Category where
@@ -98,13 +101,13 @@ res (x:\_) = Just x
 res (x:/_) = Just x
 res _      = Nothing 
 
-args :: Category -> Int
-args (x:\_) = 1 + (args x)
-args (x:/_) = 1 + (args x)
-args _      = 0;
+-- args :: Category -> Int
+-- args (x:\_) = 1 + (args x)
+-- args (x:/_) = 1 + (args x)
+-- args _      = 0;
 
-term :: PTree -> LTerm
-term (PWord w) = lTerm w
+term :: PTree -> SExpr
+term (PWord w) = expr w
 term (PFwdApp _ t _ _) = t
 term (PBwdApp _ t _ _) = t
 term (PFwdComp _ t _ _) = t
@@ -118,9 +121,9 @@ term (PNounRaise _ t _) = t
 -- Pretty printing of data structures
 
 instance Show Word where
-  showsPrec d (Word { token = t, lemma = lemma, pos = p, category = c, lTerm = l }) = 
+  showsPrec d (Word { token = t, lemma = lemma, pos = p, category = c, expr = e }) = 
     (showString t) . (showString "~") . (showString lemma) . (showString "/") . (showString p) .
-    (showString " ⊣ ") . (shows c) . (showString " : ") . (shows l)
+    (showString " ⊣ ") . (shows c) . (showString " : ") . (shows e)
 
 instance Show Category where
   showsPrec d (S a)            = showString "S"    . (showString " ") . (shows a)
@@ -144,17 +147,17 @@ instance Show Category where
 -- LaTeX "printing" of data structures
 
 includePOS :: Bool
-includePOS = False
+includePOS = True
 
 includeLambda :: Bool
 includeLambda = True
 
 includeAgreement :: Bool
-includeAgreement = False
+includeAgreement = True
 
 instance Pretty PTree where
-  render (PWord (Word { token = t, pos = p, category = c, lTerm = (LVar "?") })) = "\\inference{\\token{" ++ t ++ "}" ++ (if includePOS then "\\\\\\pos{" ++ (render p) ++ "}" else "") ++ "}{" ++ (render c) ++ "}"
-  render (PWord (Word { token = t, pos = p, category = c, lTerm = l })) = "\\inference{\\token{" ++ t ++ "}" ++ (if includePOS then "\\\\\\pos{" ++ (render p) ++ "}" else "") ++ "}{" ++ (render c) ++ (if includeLambda then ":" ++ (render l) else "") ++ "}"
+  render (PWord (Word { token = t, pos = p, category = c, expr = (Var "?") })) = "\\inference{\\token{" ++ t ++ "}" ++ (if includePOS then "\\\\\\pos{" ++ (render p) ++ "}" else "") ++ "}{" ++ (render c) ++ "}"
+  render (PWord (Word { token = t, pos = p, category = c, expr = e })) = "\\inference{\\token{" ++ t ++ "}" ++ (if includePOS then "\\\\\\pos{" ++ (render p) ++ "}" else "") ++ "}{" ++ (render c) ++ (if includeLambda then ":" ++ (render e) else "") ++ "}"
   render (PFwdApp c t t1 t2) = "\\inference[>]{" ++ (render t1) ++ (render t2) ++ "}{" ++ (render c) ++ (if includeLambda then ":" ++ (render t) else "") ++ "}"
   render (PBwdApp c t t1 t2) = "\\inference[<]{" ++ (render t1) ++ (render t2) ++ "}{" ++ (render c) ++ (if includeLambda then ":" ++ (render t) else "") ++ "}"
   render (PFwdComp c t t1 t2) = "\\inference[>B]{" ++ (render t1) ++ (render t2) ++ "}{" ++ (render c) ++ (if includeLambda then ":" ++ (render t) else "") ++ "}"
@@ -192,5 +195,5 @@ instance Pretty Feature where
   render SInv    = "inv"
   render SPss    = "pss"
   render SB      = "b"
-  render (Var x) = x
+  render (Unknown x) = x
   render f      = show f

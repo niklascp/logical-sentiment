@@ -2,59 +2,84 @@ module Lambda where
 import Pretty;
 import Data.List (nub,union,(\\));
 
-data LTerm = LVar String
-           | LAbs String LTerm
-           | LApp LTerm LTerm
-           | LFun String Int Int [LTerm]
-           | LSeq [LTerm]
-           | LAdd LTerm Int
+
+-- | Data structure for semantic expressions
+data SExpr = Var String                    -- Variable
+           | Abs String SExpr              -- Lambda abstraction
+           | App SExpr SExpr               -- Lambda application
+           | Fun String Float Int [SExpr]  -- Functor
+           | Seq [SExpr]                   -- Sequence
+           | ImpactChange SExpr Int        -- Impact change
+           | Change SExpr Float            -- Change
+           | Scale SExpr Float             -- Scale
            deriving (Eq)
 
-lid = LAbs "x" $ LVar "x"
 
-isComplexTerm :: LTerm -> Bool
-isComplexTerm (LVar _)        = False
-isComplexTerm (LApp _ _)      = True
-isComplexTerm (LAbs _ _)      = False
-isComplexTerm (LFun _ _ _ _)  = False
-isComplexTerm (LSeq _)        = True
-isComplexTerm (LAdd _ _)      = True
+-- | Returns the set of free variables in the given expression
+free :: SExpr -> [String]
+free (Var x)            = [x]
+free (App e1 e2)        = (free e1) `union` (free e2)
+free (Abs x e)          = (free e) \\ [x]
+free (Fun _ _ _ es)     = nub $ concat $ map free es
+free (ImpactChange e _) = (free e)
+free (Seq es)           = nub $ concat $ map free es
+free (Change e _)       = (free e)
+free (Scale e _)        = (free e)
 
--- α-conversion
-free :: LTerm -> [String]
-free (LVar x)         = [x]
-free (LApp t1 t2)     = (free t1) `union` (free t2)
-free (LAbs x t)       = (free t) \\ [x]
-free (LFun _ _ _ ts)  = nub $ concat $ map free ts
-free (LSeq ts)        = nub $ concat $ map free ts
-free (LAdd t _)       = (free t)
 
-substitute :: LTerm -> String -> LTerm -> LTerm
-substitute t@(LVar x) x' t'     | x == x'   = t'
-                                | otherwise = t
-substitute t@(LApp t1 t2) x' t'             = LApp (substitute t1 x' t') (substitute t2 x' t')
-substitute t@(LAbs x t1) x' t'  | x == x'   = t -- x is bound in t, so do not continue
-                                | x `elem` free t' = error $ "TODO: α-conversion of " ++ x ++ " in " ++ (show t) 
-                                | otherwise = LAbs x (substitute t1 x' t')
-substitute (LFun f j k ts) x' t'            = LFun f j k $ (map (\t -> substitute t x' t' )) ts
-substitute (LSeq ts) x' t'                  = LSeq $ (map (\t -> substitute t x' t' )) ts
-substitute (LAdd t1 j) x' t'                = LAdd (substitute t1 x' t') j
+-- | Safe substitution of variables x' with e' in e
+substitute :: SExpr -> String -> SExpr -> SExpr
+substitute e@(Var x) x' e'     | x == x'   = e'
+                               | otherwise = e
+substitute e@(App e1 e2) x' e'             = App (substitute e1 x' e') (substitute e2 x' e')
+substitute e@(Abs x e1) x' e'  | x == x'   = 
+                                   -- x is bound in e, so do not continue
+                                   e
+                               | x `elem` free e' = 
+                                   -- x ∈ FV(e'), need α-conversion of x:
+                                   let x'' = head $ xVars \\ (free e1 `union` free e')
+                                   in  substitute (Abs x'' $ substitute e1 x (Var x'')) x' e'
+                               | otherwise =
+                                   -- otherwise just continue 
+                                   Abs x (substitute e1 x' e')
+substitute e@(Fun f j k es) x' e'          = Fun f j k $ (map (\e1 -> substitute e1 x' e' )) es
+substitute e@(Seq es) x' e'                = Seq $ (map (\e1 -> substitute e1 x' e' )) es
+substitute e@(ImpactChange e1 k') x' e'     = ImpactChange (substitute e1 x' e') k'
+substitute e@(Change e1 j) x' e'           = Change (substitute e1 x' e') j
+substitute e@(Scale e1 j) x' e'            = Scale (substitute e1 x' e') j
 
+
+-- | Reduces a semantic expression
+reduce :: SExpr -> SExpr 
 -- β-reduction
-reduce :: LTerm -> LTerm 
-reduce (LApp (LAbs x t) t')       = reduce $ substitute (reduce t) x (reduce t')
-reduce (LApp t1 t2)               = if (t1 /= t1') then (reduce $ LApp t1' t2) else (LApp t1' t2)
+reduce (App (Abs x t) t')         = reduce $ substitute (reduce t) x (reduce t')
+reduce (App t1 t2)                = if (t1 /= t1') then (reduce $ App t1' t2) else (App t1' t2)
                                     where t1' = reduce t1
-reduce (LAbs x t)                 = LAbs x $ reduce t
-reduce (LFun f j k ts)            = LFun f j k $ map reduce ts
-reduce (LSeq ts)                  = LSeq $ map reduce ts
-reduce (LAdd (LAbs x t) v)        = LAbs x $ reduce $ LAdd t v
-reduce (LAdd (LFun f j 0 ts) j')  = LFun f (j + j') 0 $ map reduce ts
-reduce (LAdd (LFun f j k ts) j')  = LFun f j k $ map reduce $ (take (k - 1) ts) ++ [LAdd (ts !! (k - 1)) j'] ++ (drop (k + 1) ts)
-reduce (LAdd (LSeq ts) v)         = LSeq $ map (reduce . flip LAdd v) ts
-reduce (LAdd t j)                 = if (t /= t') then (reduce $ LAdd t' j) else (LAdd t' j)
+reduce (Abs x t)                  = Abs x $ reduce t
+reduce (Fun f j k ts)             = Fun f j k $ map reduce ts
+reduce (Seq ts)                   = Seq $ map reduce ts
+
+-- FC1, FC2, SC and PC rules:
+reduce (Change (Fun f j 0 ts) j') = Fun f (j + j') 0 $ map reduce ts
+reduce (Change (Fun f j k ts) j') = Fun f j k $ map reduce $ (take (k - 1) ts) ++ [Change (ts !! (k - 1)) j'] ++ (drop k ts)
+reduce (Change (Seq ts) j')       = Seq $ map (reduce . flip Change j') ts
+reduce (Change (Abs x t) j')      = Abs x $ reduce $ Change t j'
+reduce (Change t j)               = if (t /= t') then (reduce $ Change t' j) else (Change t' j)
                                     where t' = reduce t
-reduce x                          = x
+-- FS1, FC2, SS and PS rules:
+reduce (Scale (Fun f j 0 ts) j')  = Fun f (j * j') 0 $ map reduce ts
+reduce (Scale (Fun f j k ts) j')  = Fun f j k $ map reduce $ (take (k - 1) ts) ++ [Scale (ts !! (k - 1)) j'] ++ (drop k ts)
+reduce (Scale (Seq ts) v)         = Seq $ map (reduce . flip Scale v) ts
+reduce (Scale (Abs x t) v)        = Abs x $ reduce $ Scale t v
+reduce (Scale t j)                = if (t /= t') then (reduce $ Scale t' j) else (Scale t' j)
+                                    where t' = reduce t
+-- IC rule:
+reduce (ImpactChange (Fun f j k ts) k') = Fun f j k' ts
+reduce (ImpactChange t k')              = if (t /= t') then (reduce $ ImpactChange t' k') else (ImpactChange t k')
+                                          where t' = reduce t
+-- Otherwise
+reduce x                            = x
+
 
 -- | Creates an infinite list of variables [x, x', x'', ...]
 xVars :: [String]
@@ -66,43 +91,62 @@ zVars = iterate (++ "'") "z"
 fVars :: [String]
 fVars = iterate (++ "'") "f"
 
+
 -- | Creates an infinite list of variables [x, y, z, x', y' z', x'', y'', z'', ...]
 xyzVars :: [String]
 xyzVars = [v ++ v' | v' <- (iterate (++ "'") ""), v <- ["x","y","z"]]
 
 
-instance Show LTerm where
-  showsPrec d (LVar x)          = (showString x)
-  showsPrec d (LAbs x t)        = (showString $ "λ" ++ x ++ ".") . (shows t)
-  showsPrec d (LApp t1 t2)      = (showParen (isComplexTerm t1) (shows t1)) .
-                                  (showString " ") . 
-                                  (showParen (isComplexTerm t2) (shows t2))
-  showsPrec d (LFun f j _ [])   = (showString $ f ++ "'" ++ (show j))
-  showsPrec d (LFun f j k ts)   = (showString $ f ++ "'" ++ (show j) ++ "(") . (showList' ts) . (showString ")")
-                                    where showList' :: Show a => [a] -> ShowS
-                                          showList' [] = showString ""
-                                          showList' [a] = shows a
-                                          showList' (a1:a2:as) = (shows a1) . (showString ", ") . (showList' (a2:as))
-  showsPrec d (LSeq ts)         = (shows ts)
-  showsPrec d (LAdd t1 v)       = (shows t1) . (showString "'") . (shows v)
+-- Auxiliary functions
+
+lid = Abs "x" $ Var "x"
+
+isComplexExpr :: SExpr -> Bool
+isComplexExpr (App _ _)          = True
+isComplexExpr (Seq _)            = True
+isComplexExpr (ImpactChange _ _) = True
+isComplexExpr (Change _ _)       = True
+isComplexExpr (Scale _ _)        = True
+isComplexExpr _                  = False
 
 
-instance Pretty LTerm where
-  render (LVar x) = x
-  render (LAbs x t) = "\\lambda " ++ x ++ "." ++ 
-                      (if (isComplexTerm t) then "(" ++ (render t) ++ ")" else (render t))
-  render (LApp t1 t2) = (if (isComplexTerm t1) then "(" ++ (render t1) ++ ")" else (render t1)) ++
-                        "\\;" ++ 
-                        (if (isComplexTerm t2) then "(" ++ (render t2) ++ ")" else (render t2))
-  render (LSeq [t]) = render t
-  render (LSeq (t1:t2:ts)) = (render t1) ++ ", " ++ (render (LSeq (t2:ts)))
-  render (LFun f j 0 []) = "\\mathrm{" ++ f ++ "}_{" ++ (render j) ++ "}"
-  render (LFun f j k ts) = "\\mathrm{" ++ f ++ "}_{" ++ (render j) ++ "}^{" ++ (render k) ++ "}(" ++ (showList' ts) ++ ")"
-                         where showList' :: Pretty a => [a] -> String
-                               showList' [] = ""
-                               showList' [a] = render a
-                               showList' (a1:a2:as) = (render a1) ++ ", " ++ (showList' (a2:as))
-  render (LAdd t1 v) = (render t1) ++ "_{\\circ " ++ (render v) ++ "}"
+-- Pretty printing of data structures
 
-instance Pretty Int where
-  render i = if i < 0 then "\\overline{" ++ (show $ -i) ++ "}" else (show i)
+instance Show SExpr where
+  showsPrec d (Var x)          = (showString x)
+  showsPrec d (Abs x t)        = (showString $ "λ" ++ x ++ ".") . (shows t)
+  showsPrec d (App t1 t2)      = (showParen (isComplexExpr t1) (shows t1)) .
+                                 (showString " ") . 
+                                 (showParen (isComplexExpr t2) (shows t2))
+  showsPrec d (Fun f j _ [])   = (showString $ f ++ "'" ++ (show j))
+  showsPrec d (Fun f j k ts)   = (showString $ f ++ "'" ++ (show j) ++ "(") . (showList' ts) . (showString ")")
+                                   where showList' :: Show a => [a] -> ShowS
+                                         showList' [] = showString ""
+                                         showList' [a] = shows a
+                                         showList' (a1:a2:as) = (shows a1) . (showString ", ") . (showList' (a2:as))  
+  showsPrec d (ImpactChange t k') = (shows t) . (showString "->") . (shows k')
+  showsPrec d (Seq ts)         = (shows ts)
+  showsPrec d (Change t1 v)    = (shows t1) . (showString "⚪") . (shows v)
+  showsPrec d (Scale t1 v)     = (shows t1) . (showString "⚫") . (shows v)
+
+
+-- LaTeX "printing" of data structures
+
+instance Pretty SExpr where
+  render (Var x) = x
+  render (Abs x t) = "\\lambda " ++ x ++ "." ++ 
+                     (if (isComplexExpr t) then "(" ++ (render t) ++ ")" else (render t))
+  render (App t1 t2) = (if (isComplexExpr t1) then "(" ++ (render t1) ++ ")" else (render t1)) ++
+                       "\\;" ++ 
+                       (if (isComplexExpr t2) then "(" ++ (render t2) ++ ")" else (render t2))
+  render (Seq [t]) = render t
+  render (Seq (t1:t2:ts)) = (render t1) ++ ", " ++ (render (Seq (t2:ts)))
+  render (Fun f j 0 []) = "\\mathrm{" ++ f ++ "}_{" ++ (show j) ++ "}"
+  render (Fun f j k ts) = "\\mathrm{" ++ f ++ "}_{" ++ (show j) ++ "}^{" ++ (show k) ++ "}(" ++ (showList' ts) ++ ")"
+                        where showList' :: Pretty a => [a] -> String
+                              showList' [] = ""
+                              showList' [a] = render a
+                              showList' (a1:a2:as) = (render a1) ++ ", " ++ (showList' (a2:as))
+  render (ImpactChange t k') = "(" ++ (render t) ++ ")^{\\leadsto " ++ (show k') ++ "}"
+  render (Change t1 v) = (render t1) ++ "_{\\circ " ++ (show v) ++ "}"
+  render (Scale t1 v) = (render t1) ++ "_{\\bullet " ++ (show v) ++ "}"

@@ -4,6 +4,12 @@
 
 This appendix describes the efforts that was initially made in order to acquire a CCG lexicon by \emph{transforming} a tagged corpus, namely the \emph{Brown Corpus}.
 
+Since English is 
+\begin{quote}
+  \it As with English around the world, the English language as used in the United Kingdom and the Republic of Ireland is governed by convention rather than formal code: there is no equivalent body to the Académie française or the Real Academia Española, and the authoritative dictionaries (for example, Oxford English Dictionary, Longman Dictionary of Contemporary English, Chambers Dictionary, Collins Dictionary) record usage rather than prescribe it. In addition, vocabulary and usage change with time; words are freely borrowed from other languages and other strains of English, and neologisms are frequent.
+  \flushright{\footnotesize\url{http://en.wikipedia.org/wiki/British_English#Standardisation}}
+\end{quote}
+
 The Brown Corpus was compiled by \citeauthor{brown} \shortcite{brown} by collecting written works printed in United States during the year 1961. The corpus consists of just over one million words taken from 500 American English sample texts, with the intension of covering a highly representative variety of writing styles and sentence structures.
 
 Notable drawbacks of the Brown Corpus include its age, i.e.\ there are evidently review topics where essential and recurring words used in present day writing was not coined yet or rarely used back 50 years ago. For instance does the Brown Corpus not recognize the words \emph{internet}, \emph{hotspot}
@@ -11,6 +17,7 @@ Notable drawbacks of the Brown Corpus include its age, i.e.\ there are evidently
    sentences will containing words has found it's way into comon  that 
 
 Other corpora has been considered
+\cite{cs}
 
 \section{Tokenizer and tagger}
 The tokenizer has a very simple task, namely to convert an input string to a list of tokens (lower case words) that represent the symbols of the language. An example of the transformation is shown in

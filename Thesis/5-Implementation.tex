@@ -1,16 +1,163 @@
 %!TEX root = Thesis.tex
 
+\lstdefinelanguage{GHC}{
+	morekeywords={data,type,infix,deriving,class,where,do,instance},
+	sensitive=true,
+	morecomment=[l]{--},
+	morestring=[b]",
+}
+
 \chapter{Implementation}
 \label{chap:implementation}
 
-It was chosen to use the functional programming language \emph{Haskell} for implementing the \emph{proof of concept} program. In the following sections key aspects of the implementation will be presented. For the complete source code for the implementation please see appendix~\ref{code}.
+In order to demonstrate the logical approach, introduced in the previous chapters, a \emph{proof of concept} system was implemented. In the following sections key aspects of the implementation of this system will be presented. A complete walk-though will not be presented, but the complete source code for the implementation is available in Appendix~\ref{code}. Also notice that code segments presented in this chapter maybe simplified from the source code to ease understanding. For instance the C\&C-toolchain uses some additional primitive categories to handle conjunctions, commas and punctuations that are not consider theoretical or implementationwise interesting, as they are translatable to the set of categories already presented. In the actual implementation of the proof of concept system this is exactly what is done, once the output from the C\&C-toolchain has been parsed.
 
-The reason Haskell, specifically the \emph{Glasgow Haskell Compiler}, was chosen as programming language and platform, was the ability to ... 
-\clearpage
+It was chosen to use the purely functional programming language \emph{Haskell} for implementing the proof of concept system. The reason Haskell, specifically the \emph{Glasgow Haskell Compiler}, was chosen as programming language and platform, was i.a.\ its ability to elegantly and effectively implement a parser for the output of the C\&C-toolchain. Data structures are like in many other functional languages also possible to state in a very succinct and neat manner, which allow Haskell to model the extended semantics presented in Section~\ref{sec:extendingSemantics}, as well as any other structure presented, e.g.\ deduction proofs, lexical and phrasal categories, etc.
 
-\cite{cs}
+\section{Data structures}
+Data structures are stated in Haskell by the means of \emph{type constructors} and \emph{data constructors}. To model for instance lexical and phrasal categories the two infix operators, \texttt{:/} and \texttt{:\textbackslash} are declared (using \texttt{/} and \texttt{\textbackslash} was not considered wise, as \texttt{/} is already used for devision by the Haskell Prelude) as shown in Figure~\ref{fig:categoryDataType}. The \emph{agreement} of an primitive category is simply a set of features cf. Section~\ref{sec:featuresAgreement}, which is easiest modeled using the list structure. As features are just values from some language specific finite set they are simply modeled by \emph{nullary data constructors}. One might argue that features have \emph{different} types, e.g.\ person, number, gender, etc. However it is convenient to simply regard all features as being of the \emph{same} type, a model borrow from \citeauthor{cs} \shortcite[chap.~9]{cs}. %Finally a category can by one of the four primitive categories, which are all \emph{unary data constructors} since they carry agreement, or a compound category using one of the infix operators.
 
-\section{WordNet interface}
-The interface used to lookup data in WordNet is ... yada yada
+\begin{figure}[ht]
+\begin{cframed}{.9\textwidth}
+\vspace{-8pt}
+\begin{lstlisting}[language=GHC]
+infix 9 :/  -- Forward slash operator
+infix 9 :\  -- Backward slash operator
 
-However the interface is not complete ... the function for calculating the closure of synsets $S$ for some relatrion $R$ does not terminate if $R$ is symmetric. Since several semantic relations are symmetric (e.g. synonyms, antonyms)
+type Agreement = [Feature]
+
+data Category = S Agreement             -- Sentence
+              | N Agreement             -- Noun
+              | NP Agreement            -- Noun Phrase
+              | PP Agreement            -- Preposision Phrase
+              | Category :/ Category    -- Forward slash
+              | Category :\ Category    -- Backward slash
+
+data Feature = SDcl | SAdj | SNb | SNg | ...
+\end{lstlisting}	
+\end{cframed}
+\caption{Example of declaring the data structure for categories.}
+\label{fig:categoryDataType}
+\end{figure}
+
+The code shown in Figure~\ref{fig:categoryDataType} is really all what is needed to represent the syntactic structure of categories. Another illustration of one of the data structural advantages of using a functional programming language is shown in Figure~\ref{fig:lambdaDataType}. Notice how the declaration of the syntax for the semantic expressions is completely analog to the formal syntax given in Definition~\ref{def:Lambda} and \ref{def:semanticExpressions}, with the exception that the implemented syntax is untyped. The reason why types are omitted from the implemented model of semantic expressions is simply that they are always accompanied by a category, and thus the type of the expression is trivially obtainable when needed.
+
+\begin{figure}[ht]
+\begin{cframed}{.9\textwidth}
+\vspace{-8pt}
+\begin{lstlisting}[language=GHC]
+data SExpr = Var String                    -- Variable
+           | Abs String SExpr              -- Lambda abstraction
+           | App SExpr SExpr               -- Lambda application
+           | Fun String Float Int [SExpr]  -- Functor
+           | Seq [SExpr]                   -- Sequence
+           | ImpactChange SExpr Int        -- Impact change
+           | Change SExpr Float            -- Change
+           | Scale SExpr Float             -- Scale
+\end{lstlisting}	
+\end{cframed}
+\caption{Example of declaring the data structure for semantic expressions.}
+\label{fig:lambdaDataType}
+\end{figure}
+
+\section{Reducing semantic expressions}
+
+With data structures available for representing the syntax of the semantic expressions it is time to focus on reducing the expression using the semantic rules presented in Definition~\ref{def:semanticExpressions}. This can be easily done in a functional language by specifying a \emph{reduction function}, i.e.\ a function that recursively rewrites semantic expressions based on the rules presented in the definition. By using the \emph{pattern matching} available in Haskell, each rule can be implemented in a one-to-one manner by a function declaration that only accepts the \emph{pattern} of that rule. For instance Figure~\ref{fig:reduce} shows the implementation of the (FC1), (SC) and (PC) rules. A small set of additional function declarations are needed to allow reduction inside a structure that itself cannot be reduced, and finally the \emph{identity function} matches any pattern not captured by any of the other function declarations. Notice that $\eta$-reduction was not implemented, since this rule is merely a performance enhancing rule.
+\begin{figure}[ht]
+\begin{cframed}{.9\textwidth}
+\vspace{-8pt}
+\begin{lstlisting}[language=GHC]
+-- (FC1)
+reduce (Change (Fun f j 0 ts) j') = 
+  Fun f (j + j') 0 $ map reduce ts
+
+-- (SC)
+reduce (Change (Seq ts) j') = 
+  Seq $ map (reduce . flip Change j') ts
+
+-- (PC)
+reduce (Change (Abs x t) j') = 
+  Abs x $ reduce $ Change t j'
+\end{lstlisting}	
+\end{cframed}
+\caption{Example of declaring the rules for semantic expressions.}
+\label{fig:reduce}
+\end{figure}
+\vspace{-1em}
+
+\section{Parsing output from the C\&C tools}
+The implemented parser for the Prolog style output yielded by the C\&C-toolchain, presented briefly in Section~\ref{sec:annotatingLexicon}, uses the \textsc{Parsec} library for Haskell by \citeauthor{parsec} \shortcite{parsec}. \textsc{Parsec} is a strong monadic parser combinator, that among other things allows fast and efficient parsing of LL[1] grammars, and can thus easily capture the subset of the Prolog language used by the C\&C-toolchain. \textsc{Parsec} differs significantly from common \textsc{Yacc} approaches, since it describes the grammar \emph{directly} in Haskell, without the need of some intermediate language or processing tools.
+
+Figure~\ref{fig:candcOutputReal} shows the actual raw output from the C\&C-toolchain that is the basis the illustration in Figure~\ref{fig:candcOutput} shown back in Section~\ref{sec:annotatingLexicon}. The first section of the output represents the deduction tree, while the second represents the lexicon (obviously without semantic expressions).
+
+\begin{figure}[ht]
+\center
+\begin{cframed}{.8\textwidth}
+	\scriptsize
+	\begin{verbatim}
+ccg(1,
+ ba('S[dcl]',
+  fa('NP[nb]',
+   lf(1,1,'NP[nb]/N'),
+   lf(1,2,'N')),
+  fa('S[dcl]\NP',
+   lf(1,3,'(S[dcl]\NP)/(S[adj]\NP)'),
+   lf(1,4,'S[adj]\NP')))).
+
+w(1, 1, 'the', 'the', 'DT', 'I-NP', 'O', 'NP[nb]/N').
+w(1, 2, 'service', 'service', 'NN', 'I-NP', 'O', 'N').
+w(1, 3, 'was', 'be', 'VBD', 'I-VP', 'O', '(S[dcl]\NP)/(S[adj]\NP)').
+w(1, 4, 'great', 'great', 'JJ', 'I-ADJP', 'O', 'S[adj]\NP').
+	\end{verbatim}
+\end{cframed}
+\vspace{1em}
+	\caption{Raw output from the C\&C toolchain.}
+	\label{fig:candcOutputReal}
+\end{figure}
+
+One of the most admirable features of \textsc{Parsec} is its \emph{parser combinator library}, containing a verity bundled auxiliary functions, which allows the declaration of advanced parsers by combining smaller parsing functions. To parse for instance the categories present in both of the sections one can build an \emph{expression parser} simply by stating the \emph{symbol}, \emph{precedence} and \emph{associativity} of the operators.
+
+Figure~\ref{fig:categoryExpression} shows the parser for categories. The precedence of the operators are given by the outer list in the \emph{operator table}, while operators within the same inner list have the same precedence, which is in the case for both of the categorial infix operators. Finally a category is declared as either compound (i.e.\ a category expression), or as one of the four primitive categories. Notice how the parser needs to first \emph{try} to parse \emph{noun phrases} (NP), and then \emph{nouns} (N), since the parser otherwise could successfully parse a noun, and then meet an unexpected ``P'', which would cause a parser error.
+
+\begin{figure}[ht]
+\begin{cframed}{.9\textwidth}
+\begin{lstlisting}[language=GHC]
+pCategoryExpr :: Parser Category
+pCategoryExpr = buildExpressionParser pCategoryOpTable pCategory
+
+pCategoryOpTable :: OperatorTable Char st Category
+pCategoryOpTable = [ [ op "/"  (:/) AssocLeft, 
+                       op "\\" (:\) AssocLeft ] ]
+                   where 
+                     op s f a = Infix ( string s >> return f ) a
+
+pCategory :: Parser Category
+pCategory =         pParens pCategoryExpr
+            <|>     (pCategory' "S"     S)
+            <|> try (pCategory' "NP"    NP)
+            <|>     (pCategory' "N"     N)
+            <|>     (pCategory' "PP"    PP)
+            <?> "category" 
+\end{lstlisting}	
+\end{cframed}
+\caption{Example of parsing categorial expression.}
+\label{fig:categoryExpression}
+\end{figure}
+\vspace{1em}
+
+The parsing of the lexicon is considered trivial, since its structure is flat with the exception of the category. ...
+
+\todo[inline]{Finish}
+
+\vspace{7em}
+
+\section{WordNet interface and semantic networks}
+To lookup semantic concepts and relations in the WordNet data files an open source interface library by \citeauthor{hwordnet} \shortcite{hwordnet} was used as base. However the interface was not complete, and missed critical features. For instance the library could only calculate the closure of two semantic concepts, which of cause only is possible when the relation forms a partial order, e.g.\ as is the case with the \emph{hyponym}/\emph{hypernym} relation and the \emph{holonym}/\emph{meronym} relation. Therefore the library has undergone significant rewrite and cleanup in order to use it for the presented purpose.
+
+To model semantic networks another open source library was used, namely the \emph{Functional Graph Library} (FGL). The library implements efficient functional graph representation and algorithms presented by \citeauthor{fgl} \shortcite{fgl}. However transforming the relational representation of WordNet into an actual graph in the sense of FGL is somewhat tricky. The reason for this is that intended usage of the WordNet data files do not exposes $S$, and neither $r$ in the form of a subset of $S \times S$, which makes good sense since this representation does not scale well with $|S|$. Instead it is intended to query using the lookup function, $M$, which is indexed and allows logarithmic time lookup of lexical units; likewise a relation, $\hat{r}$, is a function from one semantic concept to a set of related concepts, i.e.\ $\hat{r}: S \to \mathcal{P}(S)$. This structure makes querying WordNet efficient, but also allows some optimization with respect to calculating the sentiment polarity value of lexical units. Recall from Section~\ref{sec:sentimentValue} that the approach is to select a set of respectively positive and negative seed concepts, and then measure the difference of the sum of distances from a lexical unit to these. However instead of regard the entire graph $(S, r)$ only a subgraph $(S', r')$ is considered, namely the subgraph that constitutes the \emph{connected component} that contains all semantic concepts that are reachable from the seed concepts using the relation function $\hat{r}$. This of cause assumes that $r$ is symmetric, which is also the case for the relations considered cf.\ Section~\ref{sec:sentimentValue}.
+
+The construction of $(S', r')$ for some set of positive and negative semantic concepts, respectively $P_\mathrm{seed}$ however it also makes the task of building a graph from negative  bui i.e.\ going from a set of semantic concepts $S$ and a relation $r$ to the graph $(S, r)$. The problem is that it really do not make ...  
+
+\todo[inline]{Finish}
+
+%... the function for calculating the closure of synsets $S$ for some relatrion $R$ does not terminate if $R$ is symmetric. Since several semantic relations are symmetric (e.g. synonyms, antonyms)

@@ -3,10 +3,10 @@
 \chapter{Discussion}
 \label{chap:Conclusion}
 
-Even though the stucture of the sentences is inspected deeply though the syntactic analysis the semantic expression assigned to adjectives and adverbs is still atomic, and based on the key concepts the the context specific positive and negative lists. Even though the lists are context specific, a concept can have ... løses dette evt. af subject-focus?
+%Even though the stucture of the sentences is inspected deeply though the syntactic analysis the semantic expression assigned to adjectives and adverbs is still atomic, and based on the key concepts the the context specific positive and negative lists. Even though the lists are context specific, a concept can have ... løses dette evt. af subject-focus?
 
 
-Since adjectives and adverbs are always reduced to only contribute to the polarity, they cannot be used to identify subjects. E.g. what do you think about the white iPhone vs. the black? (need bette ex.!)
+Since adjectives and adverbs are always reduced to only contribute to the polarity, they cannot be used to identify subjects. E.g. what do you think about the white iPhone vs. the black? (need better ex.!)
 
 \section{Fureture work}
 We expect such an algorithm to calculate a match score, that is a weighted average over several metrics. Given below are methods for calculating scores for some evident metrics.
@@ -17,6 +17,10 @@ We expect such an algorithm to calculate a match score, that is a weighted avera
   \item Pronunciation similarity -- it is an valid assumption that many misspellings still share a majority of the pronunciation with the intended word, i.e. they are approximately homophone. Thus comparing the phonetic properties of an sample string with possible matches can in cases correct misspellings. The \emph{Soundex algorithm} by Robert C. Russell and Margaret K. Odell, as described by \cite[p. 391–92]{ACP3}, is a simple, yet power full approach for this purpose.
 
 \end{itemize}
+
+---
+
+Histogram of test/train distribution - plot word length - semi-supervised self-training with re-ranking ?
 
 ---
 

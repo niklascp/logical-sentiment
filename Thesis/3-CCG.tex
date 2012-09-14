@@ -1,32 +1,33 @@
 %!TEX root = Thesis.tex
 
 \chapter{Combinatory categorial grammar}
-\label{chap:CCG}
+\label{chap:ccg}
 
 In this chapter the formalishm of Combinatory Categorial Grammar (CCG) is introduced, and based on this applied to the proposed sentiment analysis introduced in the previous chapter. For the purpose of explaining and demonstrating CCG a small fragment of English is used. This allow the usage of a ``handwritten'' lexicon initially. In chapter \ref{chap:lexiconAcquisition} the issues related to acquiring, and analyzing with, a wide coverage lexicon are addressed. For the syntactic analysis a CCG lexicon is defined as follows:
 
 \begin{definition}
-A CCG lexicon, $\mathcal{L}_\mathrm{CCG}$, is mapping from a lexical unit, $w \in \Sigma^\star$, to a set of 2-tuples, each containing a lexical category and semantical expression that the unit can entail cf.\ (\ref{eq:Lccg}), where $\Gamma$ denotes the set of lexical and phrasal categories, and $\Lambda$ denotes the set of semantical expressions.
+A CCG lexicon, $\mathcal{L}_\textsc{ccg}$, is mapping from a lexical unit, $w \in \Sigma^\star$, to a set of 2-tuples, each containing a lexical category and semantic expression that the unit can entail cf.\ (\ref{eq:Lccg}), where $\Gamma$ denotes the set of lexical and phrasal categories, and $\Lambda$ denotes the set of semantic expressions.
 \begin{align}
- \mathcal{L}_\mathrm{CCG}: \Sigma^\star \to \mathcal{P}(\Gamma \times \Lambda)
+ \mathcal{L}_\textsc{ccg}: \Sigma^\star \to \mathcal{P}(\Gamma \times \Lambda)
  \label{eq:Lccg}
 \end{align}
-%\done TODO
+\done
+\vspace{-2em}
 \end{definition}
 
-A \emph{tagging} of a lexical unit $w \in \Sigma^\star$ is simply the selection of one of the pairs yielded by $\mathcal{L}_\mathrm{CCG}(w)$. Thus given some ordered set of lexical units, which constitutes the text $T \in \Sigma^\star$ to analyse, there might exists many different taggings. This is simply due to the fact that a lexical unit can entail different lexical categories (e.g.\ ``service'' is both a noun and a verb), and different semantical expressions (e.g.\ the noun ``service'' can both refer to assistance and tableware). The number of taggings can thus be large, but is always finite.
+A \emph{tagging} of a lexical unit $w \in \Sigma^\star$ is simply the selection of one of the pairs yielded by $\mathcal{L}_\textsc{ccg}(w)$. Thus given some ordered set of lexical units, which constitutes the text $T \in \Sigma^\star$ to analyse, there might exists many different taggings. This is simply due to the fact that a lexical unit can entail different lexical categories (e.g.\ ``service'' is both a noun and a verb), and different semantic expressions (e.g.\ the noun ``service'' can both refer to assistance and tableware). The number of taggings can thus be large, but is always finite.
 
 The set of lexical and phrasal categories, $\Gamma$, are of a somewhat advanced structure in the CCG presented, since it follows recent work by \citeauthor{multiModalCCG} \shortcite{multiModalCCG} to incorporate \emph{modalities}. A category is either \emph{primitive} or \emph{compound}. The set of primitive categories, $\Gamma_\mathrm{prim} \subset \Gamma$, is language dependent and, for the English desired to be covered by this thesis, it consists of $\cat{S}$ (sentence), $\cat{NP}$ (noun phrase), $\cat{N}$ (noun) and $\cat{PP}$ (prepositional phrase). Compound categories are recursively defined by the infix operators $/_\iota$ (forward slash) and $\bsl_\iota$ (backward slash), i.e.\ if $\alpha$ and $\beta$ are members of $\Gamma$, then so are $\alpha/_\iota\beta$ and $\alpha \bsl_\iota \beta$. This allows the formation of all other lexical and phrasal categories needed. The operators are left associative, but to avoid confusion inner compound categories are always encapsulated in parentheses througout this thesis.
 
 The basic intuitive interpretation of $\alpha /_\iota \beta$ and $\alpha \bsl_\iota \beta$ is as a function that takes a category $\beta$ as argument and yields a result of category $\alpha$. Thus the argument is always stated on the right side of the operators, and the result on the left. The operator determines the dictionality of the application, i.e.\ \emph{where} the argument should appear relative to the function: the forward operator ($/_\iota$) denotes that the argument must appear on the right of the function, whereas the backward operator ($\bsl_\iota$) denotes that the argument must appear on the left. The subscript, $\iota$, denotes the \emph{modality} of the operator, which is a member of a finite set of modalities $\mathcal{M}$ and will be utilized to restrict acceptence in the next section. 
 
-The syntactic categories constitutes a type system for the semantic expressions, with a set of primitive types $\{ \tau_x \; | \; x \in \Gamma_\mathrm{prim} \}$. Thus, if a lexicon entry has category $(\cat{N} \bsl_\iota \cat{N}) /_\iota (\cat{S} /_\iota \cat{NP})$ then the associated semantic expression must honor this, and have type $(\tau_\cat{NP} \to \tau_\cat{S}) \to \tau_\cat{N} \to \tau_\cat{N}$ ($\to$ is right assosiative). This is a result of the \emph{Principle of Categorial Type Transparency} \cite[Montague, 1974]{??}. For now it is sufficient to describe the set of semantic expressions, $\Lambda$, as the set of \emph{simply-typed} $\lambda$-expressions, $\Lambda'$, cf.\ Definition \ref{def:Lambda}. In section \ref{sec:extendingSemantics} this is extended to support the desired sentiment analysis.
+The syntactic categories constitutes a type system for the semantic expressions, with a set of primitive types, $\mathcal{T}_\mathrm{prim} = \{ \tau_x \; | \; x \in \Gamma_\mathrm{prim} \}$. Thus, if a lexicon entry has category $(\cat{N} \bsl_\iota \cat{N}) /_\iota (\cat{S} /_\iota \cat{NP})$ then the associated semantic expression must honor this, and have type $(\tau_\textsc{np} \to \tau_\textsc{s}) \to \tau_\textsc{n} \to \tau_\textsc{n}$ ($\to$ is right assosiative). This is a result of the \emph{Principle of Categorial Type Transparency} \cite[Montague, 1974]{??}, and the set of all types are denoted $\mathcal{T}$. For now it is sufficient to describe the set of semantic expressions, $\Lambda$, as the set of \emph{simply-typed} $\lambda$-expressions, $\Lambda'$, cf.\ Definition \ref{def:Lambda}. In section \ref{sec:extendingSemantics} this is extended to support the desired sentiment analysis.
 
 \begin{definition}
-The set of simply typed $\lambda$-expressions, $\Lambda'$, is defined recursively as the set of expressions $e$, where $e$ is either a variable $x$ from an infinite set of typed variables $V = \{ v_1 : \tau_\alpha, v_2 : \tau_\beta, \ldots \}$, a function abstraction, or a functional application.
+The set of simply typed $\lambda$-expressions, $\Lambda'$, is defined recursively as the set of expressions $e$, where $e$ is either a variable $x$ from an infinite set of typed variables $\mathcal{V} = \{ v_1 : \tau_\alpha, v_2 : \tau_\beta, \ldots \}$, a function abstraction, or a functional application.
 \begin{align}
- x : \tau \in V                          &\quad \Rightarrow \quad  x  : \tau \in \Lambda' \tag{Variable} \\
- x : \tau_\alpha \in V, \; E : \tau_\beta \in \Lambda'          &\quad \Rightarrow \quad  \lambda x . E : \tau_\alpha \to \tau_\beta \in \Lambda' \tag{Abstraction} \\
+ x : \tau \in \mathcal{V}                      &\quad \Rightarrow \quad  x  : \tau \in \Lambda' \tag{Variable} \\
+ x : \tau_\alpha \in \mathcal{V}, \; E : \tau_\beta \in \Lambda'          &\quad \Rightarrow \quad  \lambda x . E : \tau_\alpha \to \tau_\beta \in \Lambda' \tag{Abstraction} \\
  E_1 : \tau_\alpha \to \tau_\beta \in \Lambda', \; E_2 : \tau_\beta \in \Lambda'   &\quad \Rightarrow \quad  (E_1 E_2) : \tau_\alpha \in \Lambda' \tag{Application} 
  \label{eq:Lambda}
 \end{align}
@@ -39,7 +40,7 @@ CCGs can be seen as a deductive proof system where the axioms are members of $\G
 
 The inference rules of the proof system are known as \emph{combinators}, since they take one or more function pairs, in the form of instances of $\Gamma \times \Lambda$, and produces new instances from the same set. The combinators determines the expressive power of the grammar. A deep presentation of which rules are \emph{needed}, and thus the linguistic motivation behind this, is out of the scope of this thesis. In the following essential combinators covered by \citeauthor{ts} \shortcite[chap.~6]{ts} are succinctly described, which constitutes a \emph{midely context-sensitive} class grammar. These are the development of the combinatory rules \citeauthor{sp} presented in \shortcite[chap.~3]{sp}, however with significant changes with respect to coordinating conjucntions, due to the introduction of modalities on the infix operators. 
 
-The set of modalities used, $\mathcal{M}$, follows \cite{multiModalCCG} and \cite{ts}, where $\mathcal{M} = \{ \star, \diamond, \times, \cdot \}$. The set is partially ordered cf.\ lattice (\ref{eq:modalities}).
+The set of modalities used, $\mathcal{M}$, follows \cite{multiModalCCG} and \cite{ts}, where $\mathcal{M} = \{ \star, \diamond, \times, \cdot \}$. The set is partially ordered cf.\ the lattice (\ref{eq:modalities}).
 \begin{equation}  
   \begin{tikzpicture}
     \tikzstyle{all nodes}=[inner sep=4pt]
@@ -57,7 +58,7 @@ The set of modalities used, $\mathcal{M}$, follows \cite{multiModalCCG} and \cit
 
 The basic concept of annotating the infix operators with $\iota \in \mathcal{M}$, is to restrict the application of inferrence rules during deduction in order ensure the soundness of the system. The $\star$ is the most restrictive, allowing only basic rules, $\diamond$ allows rules which perserves the word order, $\times$ allows rules which permutate the word order, and finally $\cdot$ allows any rule without restrictions. The partial ordering allows the most restrictive categories to also be included in the less restrictive, e.g.\ any rule that assumes $\alpha /_\diamond \beta$ will also be valid for $\alpha /_\star \beta$. Since $\cdot$ permits any rule it is convenient to simply write $/$ and $\bsl$ instead of respectively $/_\cdot$ and $\bsl_\cdot$, i.e.\ the dot is omitted from these operators.
 
-The simplest combinator is the \emph{functional application}, which simply allows the instances to be used as functions and arguments, as already described. The forward and backward functional application combinator can be formulated as respectivly ($>$) and ($<$), where $X$ and $Y$ are variables ranging over lexical and phrasal categories, and $f$ and $a$ are variables ranging over semantical expressions. Since the operators are annotated with $\star$, the rules can apply to even the most restrictive categories. For readability instances $(\alpha, e)$ of $\Gamma \times \Lambda$ is written $\alpha : e$. Notice that since the semantical expressions are typed, the application of $a$ to $f$ is sound. 
+The simplest combinator is the \emph{functional application}, which simply allows the instances to be used as functions and arguments, as already described. The forward and backward functional application combinator can be formulated as respectivly ($>$) and ($<$), where $X$ and $Y$ are variables ranging over lexical and phrasal categories, and $f$ and $a$ are variables ranging over semantic expressions. Since the operators are annotated with $\star$, the rules can apply to even the most restrictive categories. For readability instances $(\alpha, e)$ of $\Gamma \times \Lambda$ is written $\alpha : e$. Notice that since the semantic expressions are typed, the application of $a$ to $f$ is sound. 
 \begin{align*}
   \catvar{X}/_\star \catvar{Y} : \fvar{f}  \quad\quad                  \catvar{Y} : \fvar{a} 
   &\quad\Rightarrow\quad
@@ -69,7 +70,7 @@ The simplest combinator is the \emph{functional application}, which simply allow
   \tag{$<$}
 \end{align*}
 
-With only these two simple combinatory rules, ($>$) and ($<$), the system is capable of capturing any context-free langauge cf.\ \citeauthor{sp} \shortcite[p.~34]{sp}. For the fragment of English, used to demonstrate CCG, the lexicon is considered to be finite, and it is thus possible, and also convinient, to simply write the mapping of entailment as a subset of $\Sigma^\star \times \Gamma \times \Lambda$. Figure \ref{fig:TinyLex} shows a fragment of this demonstration lexicon. For readability, instances $(w, \alpha, e)$ of $\Sigma^\star \times \Gamma \times \Lambda$ is written $w \models \alpha : e$. Notice that the semantical expressions is not yet specified, since it for now is sufficient that just the type of the expressions is correct, and this follows implicitly from the category of the entry.
+With only these two simple combinatory rules, ($>$) and ($<$), the system is capable of capturing any context-free langauge cf.\ \citeauthor{sp} \shortcite[p.~34]{sp}. For the fragment of English, used to demonstrate CCG, the lexicon is considered to be finite, and it is thus possible, and also convinient, to simply write the mapping of entailment as a subset of $\Sigma^\star \times \Gamma \times \Lambda$. Figure \ref{fig:TinyLex} shows a fragment of this demonstration lexicon. For readability, instances $(w, \alpha, e)$ of $\Sigma^\star \times \Gamma \times \Lambda$ is written $w \models \alpha : e$. Notice that the semantic expressions are not yet specified, since it for now is sufficient that just the type of the expressions is correct, and this follows implicitly from the category of the entry.
 \begin{figure}[ht]
 \vspace{-.5em}
 \begin{align*}
@@ -86,7 +87,7 @@ With only these two simple combinatory rules, ($>$) and ($<$), the system is cap
 \label{fig:TinyLex}
 \end{figure}
 
-The lexicon for instance shows how determiners can be modeled by the category which takes a noun on the right and yields a noun phrase. Likewise a transitive verb is modeled by a category which first takes a noun phrase on the right (the object), then a noun phrase on the left (the subject) and lastly yields a sentence. Figure \ref{fig:simpleSentence} shows the deduction of $S$ from the simple declarative sentence ``the hotel had an exceptional service'' (semantics are omitted).
+The lexicon for instance shows how determiners can be modeled by the category which takes a noun on the right and yields a noun phrase. Likewise a transitive verb is modeled by a category which first takes a noun phrase on the right (the object), then a noun phrase on the left (the subject) and lastly yields a sentence. Figure~\ref{fig:simpleSentence} shows the deduction of $S$ from the simple declarative sentence ``the hotel had an exceptional service'' (semantics are omitted).
 \vfill
 \begin{figure}[ht]
 \center
@@ -101,7 +102,7 @@ $
 \vfill
 \clearpage
 
-Besides functional application, CCG also has a set of more restrictive rules, including \emph{functional composition}, defined by the forward and backward functional composition combinators, respectively (${>_{\bf B}}$) and (${<_{\bf B}}$), where $Z$ likewise is variable ranging over $\Gamma$, and $g$ over $\Lambda$.
+Besides functional application, CCG also has a set of more restrictive rules, including \emph{functional composition}, defined by the forward and backward functional composition combinators, respectively (${>_{\bf B}}$) and (${<_{\bf B}}$), where $Z$ likewise is a variable ranging over $\Gamma$, and $g$ over $\Lambda$.
 \begin{align*}
   \catvar{X}   /_\diamond  \catvar{Y} : \fvar{f} \quad \catvar{Y}  /_\diamond   \catvar{Z} : \fvar{g}
   &\quad\Rightarrow\quad
@@ -114,7 +115,7 @@ Besides functional application, CCG also has a set of more restrictive rules, in
 \end{align*}
 \vspace{-1.5em}
 
-Notice that the semantical expression yielded by (${>_{\bf B}}$) and (${<_{\bf B}}$) is equivalent to regular functional composition ($\circ$) of $f$ and $g$, but since $f \circ g \not \in \Lambda$ they need to be written as $\lambda$-expressions.
+Notice that the semantic expression yielded by (${>_{\bf B}}$) and (${<_{\bf B}}$) is equivalent to regular functional composition ($\circ$) of $f$ and $g$, but since $f \circ g \not \in \Lambda$ they need to be written as $\lambda$-expressions.
 
 Functional composition is often used in connection with another rule, namely \emph{type-raising}, defined by the forward and backward type-raising combinators, respectively (${>_{\bf T}}$) and (${<_{\bf T}}$), where $T$ is a variable ranging over categories.
 \begin{align*}
@@ -129,11 +130,12 @@ Functional composition is often used in connection with another rule, namely \em
 \end{align*}
 \vspace{-1.5em}
 
-Type-rasing allows a, often primitive category, to ... $\iota$ is ... (unpredctable?) and is thus often suppressed. ... \todo{Finish} 
+Type-rasing allows a often primitive category, $X$, to raise into a category that instead captures a compound category, which is a function over $X$. The modality of the result is not controllable and is thus often suppressed, however any constrains of the applicability of $X$ of cause continue cf.\ \cite{multiModalCCG}.
 
-\todo[inline]{Re-write: The introduction of function composition into a categorial grammar leads to many kinds of derivational ambiguity that are vacuous in the sense that they do not correspond to semantic ambiguities.
-} 
+Notice that the introduction of these rules, i.e. function composition and type-raising, allows deductional ambiguity, i.e. a proof for some sentence may be achievable by multiple deductions as shown in Figure~\ref{fig:multipleDeductions}. However such ambiguities are immaterial, since they do not correspond to semantic ambiguity.
+
 \begin{figure}[ht]
+\vspace{1em}
 \begin{minipage}[b]{0.5\linewidth}
 \center
 \scalebox{.7}{
@@ -175,23 +177,24 @@ $
 $
 }
 \end{minipage}
-  \caption{Multiple deductions.}
+  \caption{Multiple deductions of the same sentence.}
   \label{fig:multipleDeductions}
+  \vspace{1em}
 \end{figure}
 
-A system with these rules demonstrates what is arguably CCG's most unique advantage, namely the ability to handle unbounded dependencies without any additional lexicon entries. For instance a transitive verb, with the \emph{same} category as shown in figure~\ref{fig:TinyLex}, can participate in relative clauses as shown in Example~\ref{ex:relativeClause}.
+
+A system with these rules demonstrates what is arguably CCG's most unique advantage, namely the ability to handle \emph{unbounded dependencies} without any additional lexicon entries. For instance a transitive verb, with the \emph{same} category as shown in Figure~\ref{fig:TinyLex}, can participate in relative clauses as shown in Example~\ref{ex:relativeClause}, given the presence of a small set of entries for relative pronouns, e.g.\ Figure~\ref{fig:tinyLex2}.
 
 \begin{figure}[ht]
-\vspace{-1em}
 \begin{align*}
-  \token{that}       &\models (\cat{N} \bsl_\diamond \cat{N})/(\cat{S}/_\diamond\cat{NP})    : (\ldots)    \tag{Relative pronouns}   
+  \token{that}       &\models (\cat{N} \bsl_\diamond \cat{N})/(\cat{S}/_\diamond\cat{NP})    : (\ldots)    \tag{Relative pronouns}   \\
+  \token{that}       &\models (\cat{N} \bsl_\diamond \cat{N})/(\cat{S}\bsl_\diamond\cat{NP})    : (\ldots)    
 \end{align*}
-\vspace{-1em}
-\caption{A fragment of a tiny handwritten lexicon TODO.}
-\label{fig:TinyLex2}
+\caption{Fragment of lexicon for the relative pronoun ``that''.}
+\label{fig:tinyLex2}
 \end{figure}
 
-\clearpage
+
 \begin{example}
 Figure~\ref{fig:relativeClause} shows an example of both type-rasing and functional composition. The transitive verb (provided) is requiring an object in the form of a noun phrase to its right. However, since it participate in a relative clause, its object is given by the noun that the clause modifies. Type raising allows the subject of the relative clause to raise into a category that can compose with the verb, and thus allows the relative pronoun (that) to bind the relative clause to the noun.
 \vfill
@@ -236,6 +239,7 @@ Normally an adverb is put after the object of the verb it modifies in English, e
 In such cases the adverb needs to compose with the verb, before the verb combines with its object. The crossed functional composition allows exatly such structures as shown in Figure~\ref{fig:heavyNP}.
 
 \begin{figure}[ht]
+\vspace{2em}
 \center
 \scalebox{.7}{
 $
@@ -244,17 +248,21 @@ $
 }
 \caption{Deduction of ``heavy'' noun phrase shifting.}
 \label{fig:heavyNP}
+\vspace{1em}
 \end{figure}
 \label{ex:heavyNP}
 \end{example}
 \done
 
-\citeauthor{ts} \shortcite{sp,ts} introduces a few additional combinators to capture even more ``exotic'' linguistic phenomena. Recollect that the rules are language independent, and indeed some of the additional phenomena covered by \citeauthor{sp} is either considered infrequent (e.g.\ \emph{parasitic gaps}), or even absent (e.g.\ \emph{cross-serial dependencies}), from the English language desired to cover by this sentiment analysis. It will later be shown (section \ref{sec:TODO}) that the rules already presented indeed cover a substantial part of English.
+\citeauthor{ts} \shortcite{sp,ts} introduces a few additional combinators to capture even more ``exotic'' linguistic phenomena. Recollect that the rules are language independent, and indeed some of the additional phenomena covered by \citeauthor{sp} is either considered infrequent (e.g.\ \emph{parasitic gaps}), or even absent (e.g.\ \emph{cross-serial dependencies}), from the English language desired to cover by this sentiment analysis. It will later be shown (Chapter~\ref{chap:lexiconAcquisition}) that the rules already presented indeed cover a substantial part of English.
 
 \section{Coordination}
-Coordination by appearance of a coordinating conjunction, such as \emph{and}, \emph{or}, \emph{but}, punctuation and comma, etc., can be modeled simply by the intuition that such should bind two constituents of same syntactic category, but with different semantical expressions, and yield a result also of that category. Some examples of the \emph{and} coordinating conjunction is shown in figure~\ref{fig:conjunctionLex}.
+As mentioned in the introduction, one of the goals is to correctly capture the sentiment of entities in sentences with coordination of multiple opinions.
+
+Coordination by appearance of a coordinating conjunction, such as \emph{and}, \emph{or}, \emph{but}, punctuation and comma, etc., can be modeled simply by the intuition that such should bind two constituents of same syntactic category, but with different semantic expressions, and yield a result also of that category. Some examples of the \emph{and} coordinating conjunction is shown in Figure~\ref{fig:conjunctionLex}.
+
 \begin{figure}[ht]
-\vspace{-.5em}
+\vspace{-1.5em}
 \begin{align*}
   \token{and}       &\models (\cat{S} \bsl_\star \cat{S}) /_\star \cat{S}    : (\ldots)    \tag{Conjunctions} \\
   \token{and}       &\models (\cat{N} \bsl_\star \cat{N}) /_\star \cat{N}    : (\ldots)     \\
@@ -262,12 +270,13 @@ Coordination by appearance of a coordinating conjunction, such as \emph{and}, \e
   &\hdots 
 \end{align*}
 \vspace{-1.5em}
-\caption{A fragment of a tiny handwritten lexicon TODO.}
+\caption{Fragment of lexicon for the coordinating conjunction ``and''.}
 \label{fig:conjunctionLex}
 \end{figure}
 
 It now becomes evident, why the modalities are needed, since application of the crossed composition combinators without any restrictions could allow scrambled sentences to be deducted falsely, e.g. Figure~\ref{fig:withoutModalities}. 
 \begin{figure}[ht]
+\vspace{1em}
 \center
 \scalebox{.7}{
 $
@@ -314,17 +323,19 @@ $
 }
 $
 }
-\caption{Without the modalities .}
+\caption{Unsound deduction of sentence given absence of modalities.}
 \label{fig:withoutModalities}
-\vspace{-.5em}
+\vspace{1em}
 \end{figure}
 
 Similar pit-falls are possible if unresticted application of ($>_{\bf B}$) and ($<_{\bf B}$) was allowed, as shown by \citeauthor{baldridgeThesis} \shortcite[chap.~4]{baldridgeThesis} for the Turkish language. This justifies the requirement for the modalities \citeauthor{baldridgeThesis} originally proposed in \shortcite[chap.~5]{baldridgeThesis} and \citeauthor{multiModalCCG} presented in a refined version in \shortcite{multiModalCCG}.
 
 \section{Features and agreement}
-The syntactic analysis until now has concerned the acceptable order of lexical units based on their categories. However, to guarantee that the accepted phrases indeed follows correct grammar, the \emph{features} of the lexical units must also \emph{agree}. The set of features that might apply is language dependent, for instance most indo-european languages state features for person (e.g. 1st, 2nd or 3rd), number (e.g. singular or plural), gender (e.g. male or female), etc. To incorporate this the primitive categories, $\Gamma_\mathrm{prim}$, cannot be seen as atomic entities, but instead as structures that carries features, e.g.\ $\cat{S_\mathrm{dcl}}$ and $\cat{NP}_\mathrm{sg,3rd}$ denotes respectively a \emph{declarative} sentence, and a \emph{singular, 3rd-person} noun phrase. A set of features \emph{agrees} with another if they do not contain different elements of the same \emph{kind}. For instance $\cat{NP}_\mathrm{sg,3rd}$ agree with $\cat{NP}_\mathrm{sg}$, but not with $\cat{NP}_\mathrm{pl,3rd}$, etc.
+\label{sec:featuresAgreement}
 
-However, as mentioned in section~\ref{sec:syntacticAnalysis}, a strict enforcement is not intended for the purpose of sentiment analysis, e.g.\ reviews containing small grammatical errors, such as wrong number as shown in (\ref{ex:wrongNumber}), should not be discarded simply for this reason. 
+The syntactic analysis until now has concerned the acceptable order of lexical units based on their categories. However, to guarantee that the accepted phrases indeed follows correct grammar, the \emph{features} of the lexical units must also \emph{agree}. The set of features that might apply is language dependent, for instance most indo-european languages state features for person (e.g.\ 1st, 2nd or 3rd), number (e.g.\ singular or plural), gender (e.g.\ male or female), etc. To incorporate this the primitive categories, $\Gamma_\mathrm{prim}$, cannot be seen as atomic entities, but instead as structures that carries features, e.g.\ $\cat{S_\mathrm{dcl}}$ and $\cat{NP}_\mathrm{sg,3rd}$ denotes respectively a \emph{declarative} sentence, and a \emph{singular, 3rd-person} noun phrase. A set of features \emph{agrees} with another if they do not contain different elements of the same \emph{kind}. For instance $\cat{NP}_\mathrm{sg,3rd}$ agree with $\cat{NP}_\mathrm{sg}$, but not with $\cat{NP}_\mathrm{pl,3rd}$, etc.
+
+However, as mentioned in Section~\ref{sec:syntacticAnalysis}, a strict enforcement is not intended for the purpose of sentiment analysis, e.g.\ reviews containing small grammatical errors, such as wrong number as shown in (\ref{ex:wrongNumber}), should not be discarded simply for this reason. 
 
 \begin{numquote}
   The hotel have great service
@@ -348,19 +359,22 @@ $
 The CCG presented in the previous sections has been based on established literature, but in order to apply the grammar formalism to the area of sentiment analysis the expressive power of the semantics need to be adapted to this task. Until now the semantics has not been of major concern, recall that it just was defined as simply typed $\lambda$-expressions cf.\ Definition~\ref{def:Lambda}. Furthermore the actual \emph{semantics} of these semantic expressions has not been disclosed, other than the initial use of $\lambda$-expressions might hint that ordinary conventions of such presumably apply. The semantic expressions are given by Definition~\ref{def:semanticExpressions}.
 
 \begin{definition}
-The set of semantic expressions, $\Lambda$, are defined as a superset of $\Lambda$' (see Definition~\ref{def:Lambda}). Besides variable, function abstraction and a functional application, the following structures are available: a $n$-ary \emph{functor} ($n \geq 0$) with name $f$ from an infinite set of functor names, polarity $j \in [-\omega;\omega]$, and \emph{impact argument} $k$ ($0 \leq k \leq n$); a \emph{sequence} of $n$ semantic expressions of the \emph{same} type; the \emph{change} of an expression's polarity; and the \emph{scale} of an expression's polarity. TODO: Explain $\psi$
+The set of semantic expressions, $\Lambda$, are defined as a superset of $\Lambda$' (see Definition~\ref{def:Lambda}). Besides variables, function abstraction and functional application, the following structures are available: a $n$-ary \emph{functor} ($n \geq 0$) with name $f$ from an infinite set of functor names, polarity $j \in [-\omega;\omega]$, and \emph{impact argument} $k$ ($0 \leq k \leq n$); a \emph{sequence} of $n$ semantic expressions of the \emph{same} type; the \emph{change of impact}, the \emph{change} of an expression's polarity; and the \emph{scale} of an expression's polarity. The magnitude of which a expression's polarity may scale is given by $[-\psi; \psi]$.
+
 \begin{align}
 % x \in V                              &\quad \Rightarrow \quad  x \in \Lambda \tag{Variable} \\
 % x \in V, \; M \in \Lambda            &\quad \Rightarrow \quad  \lambda x . M \in \Lambda \tag{Abstraction} \\
 % M \in \Lambda, \; N \in \Lambda      &\quad \Rightarrow \quad  (M N) \in \Lambda \tag{Application} \\
  E_1, \ldots, E_n \in \Lambda, 0 \leq k \leq n, \; j \in [-\omega;\omega]         &\quad \Rightarrow \quad f^k_j(E_1, \ldots, E_n) \in \Lambda \tag{Functor} \\
  E_1 : \tau, \ldots, E_n : \tau \in \Lambda     &\quad \Rightarrow \quad  \langle E_1, \ldots, E_n \rangle  : \tau \in \Lambda \tag{Sequence} \\
+ E : \tau \in \Lambda, 0 \leq k' &\quad \Rightarrow \quad E^{\leadsto k'} : \tau \tag{Impact change} \\
  E : \tau \in \Lambda, \; j \in [-\omega;\omega]      &\quad \Rightarrow \quad  E_{\circ
  j}  : \tau \in \Lambda \tag{Change}  \\ 
  E : \tau \in \Lambda, \; j \in [-\psi;\psi]      &\quad \Rightarrow \quad  E_{\bullet j}  : \tau \in \Lambda \tag{Scale} 
 \end{align}
+\vspace{.3em}
 
-The semantics includes normal $\alpha$-conversion and $\beta$-, $\eta$-reduction as shown below, where $E_1[x \mapsto E_2]$ denotes the \emph{safe} substitution of $x$ with $E_2$ in $E_1$, and $\mathit{FV}(E)$ denotes the set of free variables in $E$. For details see for instance \cite{}.
+The semantics includes normal $\alpha$-conversion and $\beta$-, $\eta$-reduction as shown below, where $E_1[x \mapsto E_2]$ denotes the \emph{safe} substitution of $x$ with $E_2$ in $E_1$, and $\mathit{FV}(E)$ denotes the set of free variables in $E$. For details see for instance \cite{TODO}.
 \begin{align}
  \lambda x . E &\quad \Rightarrow \quad \lambda y . E[x \mapsto y]
  \tag{$\alpha$-conversion} \quad\quad &y \not \in FV(E) \\
@@ -369,6 +383,7 @@ The semantics includes normal $\alpha$-conversion and $\beta$-, $\eta$-reduction
 \lambda x . E x &\quad \Rightarrow \quad E
  \tag{$\eta$-reduction} \quad\quad &x \not \in FV(E) 
 \end{align}
+\vspace{.3em}
 
 More interesting are the rules that actually allow the binding of polarities to the phrase structures. The \emph{change of a functor} itself is given by the rule (FC1), which apply to functors with, impact argument, $k = 0$. For any other value of $k$ the functor acts like a non-capturing enclosure that passes on any change to its $k$'th argument as follows from (FC2). The \emph{change of a sequence} of expressions is simply the change of each element in the sequence cf.\ (SC). Finally it is allowed to \emph{push change} inside an abstraction as shown in (PC), simply to ensure the applicability of the $\beta$-reduction rule.
 \begin{align}
@@ -379,8 +394,9 @@ f_j^k(E_1, \ldots E_n)_{\circ j'} &\quad \Rightarrow \quad f_{j}^k(E_1, \ldots, 
  \lambda x . (E_{\circ j'})
  \tag{PC} 
 \end{align}
+\vspace{.3em}
 
-Completely analogue rules are provided for the scaling as shown in respectively (FS1), (FS2), (SS) and (PS). Notice that the all these \emph{change} and \emph{scale} rules are type preserving.
+Completely analogue rules are provided for the scaling as shown in respectively (FS1), (FS2), (SS) and (PS). Notice that these \emph{change} and \emph{scale} rules are type preserving.
 \begin{align}
 f_j^0(E_1, \ldots, E_n)_{\bullet j'} &\quad \Rightarrow \quad f_{j \widehat{\hspace{2.5pt} \cdot \hspace{2.5pt}} j'}^0(E_1, \ldots, E_n)  \tag{FS1} \\
 f_j^k(E_1, \ldots E_n)_{\bullet j'} &\quad \Rightarrow \quad f_{j}^k(E_1, \ldots, E_{k \bullet j'}, \ldots E_n )  \tag{FS2} \\
@@ -409,20 +425,24 @@ It is assumed that the addition and multiplication operator, respectively $\wide
 \label{eq:mulHat}
 \end{align}
 
+Finally the \emph{change of impact} allows change of a functors impact argument cf.\ (IC).
+\begin{align}
+f_j^k(E_1, \ldots E_n)^{\leadsto k'} &\quad \Rightarrow \quad f_j^{k'}(E_1, \ldots E_n)
+ \tag{IC} 
+\end{align}
+
 \label{def:semanticExpressions}
 \done
 \end{definition}
 
-The presented definition of semantical expressions allow the specification ...
+The presented definition of semantic expressions allow the specification ...
 
-TODO: lead up to Example~\ref{ex:semantics2} and \ref{ex:semantics2} ...
+\todo[inline]{Lead up to Example~\ref{ex:semantics} and \ref{ex:semantics2} ...}
 
-\begin{example}
-Normally an adverb is put after the object of the verb it modifies in English, e.g.\ ``the hotel served breakfast daily''. However if the object of the verb becomes ``heavy'' it may sometimes be moved to the end of the sentence, e.g.\ ``the hotel served daily a large breakfast with fresh juice''.
+\begin{example} 
+...
 
-\todo[inline]{Write example text! Notice that nouns, verbs, etc. are reduced to their lemma for functor naming...}
-
-In such cases the adverb needs to compose with the verb, before the verb combines with its object. The crossed functional composition allows exatly such structures as shown in Figure~\ref{fig:semantics}.
+\todo[inline]{Write example text for simple declarative sentence ... The entity ``service'' is modifyied by the adjective ... yada yada ... Notice that nouns, verbs, etc. are reduced to their lemma for functor naming...}
 
 \begin{figure}[ht]
 \center
@@ -431,33 +451,32 @@ $
 \inference[<]{\inference{\token{the} \; \token{hotel}}{\cat{NP}:\mathrm{hotel}_{0}}\inference[>]{\inference{\token{had}}{(\cat{S} \bsl \cat{NP})/\cat{NP}:\lambda x.\lambda y.\mathrm{have}_{0}^{0}(x, y)}\inference[>]{\inference{\token{an}}{\cat{NP}/\cat{N}:\lambda x.x}\inference[>]{\inference{\token{exceptional}}{\cat{N}/\cat{N}:\lambda x.(x_{\circ 15})}\inference{\token{service}}{\cat{N}:\mathrm{service}_{0}}}{\cat{N}:\mathrm{service}_{15}}}{\cat{NP}:\mathrm{service}_{15}}}{\cat{S} \bsl \cat{NP}:\lambda y.\mathrm{have}_{0}^{0}(\mathrm{service}_{15}, y)}}{\cat{S}:\mathrm{have}_{0}^{0}(\mathrm{service}_{15}, \mathrm{hotel}_{0})}
 $
 }
-\caption{Deduction of ``heavy'' noun phrase shifting.}
+\caption{TODO}
 \label{fig:semantics}
 \end{figure}
 \label{ex:semantics}
 \end{example}
 \done
 
-\begin{example}
-Normally an adverb is put after the object of the verb it modifies in English, e.g.\ ``the hotel served breakfast daily''. However if the object of the verb becomes ``heavy'' it may sometimes be moved to the end of the sentence, e.g.\ ``the hotel served daily a large breakfast with fresh juice''.
+\begin{example} 
+...
 
-\todo[inline]{Write example text!}
-
-In such cases the adverb needs to compose with the verb, before the verb combines with its object. The crossed functional composition allows exatly such structures as shown in Figure~\ref{fig:semantics}.
+\todo[inline]{Write example text for sentence with relative clause and ``heavy'' noun phrase shifting ... The entity ``breakfast'' is modifyied by the adjective ... yada yada ... Notice that long distance relation between the entity and the adjective. Also explain why \emph{impact change} is needed to ``close'' the relative clause for further modification.}
 
 \begin{sidewaysfigure}[ht]
 \center
-\scalebox{.5}{
+\scalebox{.44}{
 $
-\inference[<]{\inference{\token{We}}{\cat{NP}:\mathrm{we}_{0}}\inference[>]{\inference{\token{found}}{(\cat{S} \bsl \cat{NP})/\cat{NP}:\lambda x.\lambda y.\mathrm{find}_{0}^{0}(x, y)}\inference[<]{\inference[>]{\inference{\token{the}}{\cat{NP}/\cat{N}:\lambda x.x}\inference{\token{service}}{\cat{N}:\mathrm{service}_{0}}}{\cat{NP}:\mathrm{service}_{0}}\inference{\inference[>]{\inference{\token{to}}{(\cat{S} \bsl \cat{NP})/(\cat{S} \bsl \cat{NP}):\lambda x.\lambda y.\mathrm{to}_{0}^{0}(x\;y)}\inference[<]{\inference[>]{\inference{\token{be}}{(\cat{S} \bsl \cat{NP})/(\cat{S} \bsl \cat{NP}):\lambda x.x}\inference{\token{fine}}{\cat{S} \bsl \cat{NP}:\lambda x.(x_{\circ 6})}}{\cat{S} \bsl \cat{NP}:\lambda x.(x_{\circ 6})}\inference[>]{\inference{\token{for}}{((\cat{S} \bsl \cat{NP}) \bsl (\cat{S} \bsl \cat{NP}))/\cat{NP}:\lambda x.\lambda y.\lambda z.\mathrm{for}_{0}^{0}(y\;x, z)}\inference[>]{\inference{\token{our}}{\cat{NP}/\cat{N}:\lambda x.\mathrm{our}_{0}^{0}(x)}\inference{\token{needs}}{\cat{N}:\mathrm{need}_{0}}}{\cat{NP}:\mathrm{our}_{0}^{0}(\mathrm{need}_{0})}}{(\cat{S} \bsl \cat{NP}) \bsl (\cat{S} \bsl \cat{NP}):\lambda y.\lambda z.\mathrm{for}_{0}^{0}(y\;\mathrm{our}_{0}^{0}(\mathrm{need}_{0}), z)}}{\cat{S} \bsl \cat{NP}:\lambda z.\mathrm{for}_{0}^{0}(\mathrm{our}_{6}^{0}(\mathrm{need}_{0}), z)}}{\cat{S} \bsl \cat{NP}:\lambda y.\mathrm{to}_{0}^{0}(\mathrm{for}_{0}^{0}(\mathrm{our}_{6}^{0}(\mathrm{need}_{0}), y))}}{\cat{NP} \bsl \cat{NP}:\lambda y.\mathrm{to}_{0}^{0}(\mathrm{for}_{0}^{0}(\mathrm{our}_{6}^{0}(\mathrm{need}_{0}), y))}}{\cat{NP}:\mathrm{to}_{0}^{0}(\mathrm{for}_{0}^{0}(\mathrm{our}_{6}^{0}(\mathrm{need}_{0}), \mathrm{service}_{0}))}}{\cat{S} \bsl \cat{NP}:\lambda y.\mathrm{find}_{0}^{0}(\mathrm{to}_{0}^{0}(\mathrm{for}_{0}^{0}(\mathrm{our}_{6}^{0}(\mathrm{need}_{0}), \mathrm{service}_{0})), y)}}{\cat{S}:\mathrm{find}_{0}^{0}(\mathrm{to}_{0}^{0}(\mathrm{for}_{0}^{0}(\mathrm{our}_{6}^{0}(\mathrm{need}_{0}), \mathrm{service}_{0})), \mathrm{we}_{0})}
+\inference[<]{\inference[<]{\inference[>]{\inference{\token{The}\\\pos{DT}}{\cat{NP}_\mathrm{nb}/\cat{N}_{}:\lambda x.x}\inference{\token{breakfast}\\\pos{NN}}{\cat{N}_{}:\mathrm{breakfast}_{0}}}{\cat{NP}_\mathrm{nb}:\mathrm{breakfast}_{0}}\inference[>]{\inference{\token{that}\\\pos{IN}}{(\cat{NP}_{} \bsl \cat{NP}_{})/(\cat{S}_\mathrm{dcl}/\cat{NP}_{}):\lambda x.\lambda y.((x\;y)^{\leadsto 1})}\inference[>B]{\inference[>T]{\inference[>]{\inference{\token{the}\\\pos{DT}}{\cat{NP}_\mathrm{nb}/\cat{N}_{}:\lambda x.x}\inference{\token{resturant}\\\pos{NN}}{\cat{N}_{}:\mathrm{resturant}_{0}}}{\cat{NP}_\mathrm{nb}:\mathrm{resturant}_{0}}}{\cat{S}_{X}/(\cat{S}_{X} \bsl \cat{NP}_{}):\lambda f.(f\;\mathrm{resturant}_{0})}\inference[<B_\times]{\inference{\token{served}\\\pos{VBD}}{(\cat{S}_\mathrm{dcl} \bsl \cat{NP}_{})/\cat{NP}_{}:\lambda x.\lambda y.\mathrm{serve}_{0}^{0}(x, y)}\inference{\token{daily}\\\pos{RB}}{(\cat{S}_{X} \bsl \cat{NP}_{}) \bsl (\cat{S}_{X} \bsl \cat{NP}_{}):\lambda x.(x_{\bullet 1})}}{(\cat{S}_\mathrm{dcl} \bsl \cat{NP}_{})/\cat{NP}_{}:\lambda x.\lambda y.\mathrm{serve}_{0}^{0}(x, y)}}{\cat{S}_\mathrm{dcl}/\cat{NP}_{}:\lambda x.\mathrm{serve}_{0}^{0}(x, \mathrm{resturant}_{0})}}{\cat{NP}_{} \bsl \cat{NP}_{}:\lambda y.\mathrm{serve}_{0}^{1}(y, \mathrm{resturant}_{0})}}{\cat{NP}_{}:\mathrm{serve}_{0.0}^{1}(\mathrm{breakfast}_{0}, \mathrm{resturant}_{0})}\inference[>]{\inference{\token{was}\\\pos{VBD}}{(\cat{S}_\mathrm{dcl} \bsl \cat{NP}_{})/(\cat{S}_{adj} \bsl \cat{NP}_{}):\lambda x.x}\inference{\token{excellent}\\\pos{JJ}}{\cat{S}_{adj} \bsl \cat{NP}_{}:\lambda x.(x_{\circ 4})}}{\cat{S}_\mathrm{dcl} \bsl \cat{NP}_{}:\lambda x.(x_{\circ 4})}}{\cat{S}_\mathrm{dcl}:\mathrm{serve}_{0}^{1}(\mathrm{breakfast}_{4}, \mathrm{resturant}_{0})}
 $
 }
-\caption{Deduction of ``heavy'' noun phrase shifting.}
+\caption{Sentiment of sentence with ``heavy'' noun phrase shifting.}
 \label{fig:semantics2}
 \end{sidewaysfigure}
 \label{ex:semantics2}
 \end{example}
 \done
-\clearpage
 
-TODO: End on a up-note ...
+\todo[inline]{End on a up-note :)}
+
+\clearpage

@@ -1,4 +1,22 @@
 %!TEX root = Thesis.tex
 
-\chapter{Test results}
-\label{chap:testResults}
+\chapter{Evaluation}
+\label{chap:evaluation}
+
+
+The data set used for evaluating the presented logical approach for sentiment analysis, specifically the \emph{proof of concept} system is the \emph{Opinosis Dataset}, originally used by \cite{Opinosis}. The data set consists of texts from actual user reviews on a total of 51 different topics. The topics are ranging over different objects, from consumer electronics (e.g.\ GPS navigation, music players, etc.) to hotels, restaurants and cars. For most of the objects, reviews are covered by multiple topics. For instance a specific car is covered by the topics \emph{comfort}, \emph{interior}, \emph{mileage}, \emph{performance}, and \emph{seats}.
+
+It has been hard to find any real alternatives for the \emph{Opinosis Dataset} for several reasons: Most collected reviews are commercial, and thus not free to use; furthermore the \emph{Opinosis Dataset} also contains summerized texts for each of its topics, which are constructed by manual, human interpretation. The latter allow a straight approach for comparison of any results the proposed system will yield.\\
+\begin{align}
+  &\textit{The hotel buffet had fabulous food.}
+  \label{txt:Ex1} \\[3mm]  
+  &\textit{Very friendly servers and nice selection of food at a reasonable price.}
+  \label{txt:Ex2} \\[3mm]  
+  &\textit{Room service was extortionate though, very very expensive,} \nonumber \\
+  &\textit{so we didnt bother, as food outlets a few minutes walk away.}
+  \label{txt:Ex3}
+\end{align}
+
+The texts (\ref{txt:Ex1}) to (\ref{txt:Ex3}) show actual extracts from the data set for a topic on food quality on the Swissôtel Restaurant. While (\ref{txt:Ex1}) is a valid declarative sentence, (\ref{txt:Ex2}) is not, since it lacks a subject (i.e.\ the restaurant). A coarse review of the text in the dataset reveals that missing subjects are a repeating issue. This might not seem that odd, since many people would implicitly imply the subject from the topic that they are reviewing. Thus text missing subjects can in many cases still be considered as valid sentences with minimal effort. The text (\ref{txt:Ex3}) is on the other hand missing a transitive verb (presumably \emph{are}) from the subordinate clause. In cases where such savere gramatically errors occurs it is sugested to ignore the clause, and try only to analyse the main clause. Furthermore the text (\ref{txt:Ex3}) use repeated adverbs (e.g.\ \emph{very very}) to express intensification, however it should not be any major concern that a verb or adjective are modified multiple times by the \emph{same} adverb, but the intended intensification will probably not be included in the semantic analysis. Thus formalizing such a grammer is mostly a tak od designing such lexicon.
+
+As evendent from these examples far from all texts in the dataset are valid sentences.

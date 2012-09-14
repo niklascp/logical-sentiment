@@ -191,3 +191,9 @@ instance Show SearchResult where
   showsPrec i sr@(SearchResult { srSynset = ss }) =
     showString (unwords $ map (\(w,_, i) -> case i of { SenseNumber i' -> w ++ "#" ++ show i'; AllSenses -> w }) $ ssWords ss)
     -- showString (unwords $ map (\(w,_,SenseNumber i) -> w ++ "#" ++ show i) $ ssWords ss) -- . showChar '#' . (showString $ show $ srSenseNum sr) . showChar '\n' . (showString $ show $ pos ss) . showChar ':' . (showString $ show $ hereIAm ss)
+
+instance Eq SearchResult where
+  a == b = (srToKey a) == (srToKey b)
+
+instance Ord SearchResult where
+  compare a b = compare (srToKey a) (srToKey b) 
