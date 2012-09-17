@@ -10,39 +10,38 @@ import Data.GraphViz
 import Data.GraphViz.Attributes
 import Data.GraphViz.Attributes.Complete
 
-unfoldGMany :: (Ord a) => (a -> [a]) -> [a] -> (Map a Node, Gr a Int)
-unfoldGMany f roots = runST ( unfoldGManyST f roots )
+unfoldG :: (Ord a) => (a -> [a]) -> [a] -> (Map a Node, Gr a Int)
+unfoldG r seeds = runST ( unfoldST r seeds )
 
-unfoldGManyST :: (Ord a) => (a -> [a]) -> [a] -> ST s (Map a Node, Gr a Int)
-unfoldGManyST adj seeds =
-    let 
-        firstId = 0::Node
-    in  
-      do mtab      <- newSTRef (Map.empty)
-         allNodes  <- newSTRef []           -- [(LNode, [LEdge])]
-         vertexRef <- newSTRef firstId
-         let visit d n = do probe <- memTabFind mtab n
-                            case probe of
-                              Just v  -> return v
-                              Nothing -> do v <- allocVertex vertexRef   -- Get next vetex
-                                            memTabBind n v mtab          -- Update map
-                                            let ns' = adj n              -- Get adjancent nodes 
-                                            ws <- mapM (visit $ d + 1) ns' -- Visit adjancent nodes 
-                                            let res = ((v, n), [(v,w,1) | w <- ws])
-                                            modifySTRef allNodes (res:)
-                                            return v
-         mapM_ (visit 0) seeds
-         list <- readSTRef allNodes         
-         nodeMap <- readSTRef mtab -- (return . map fromJust) =<< mapM (memTabFind mtab) seeds
-         let nodes = [n | (n, _) <- list]
-         let edges = concat [es | (_, es) <- list]
-         return (nodeMap, mkGraph nodes edges)
-    where 
-        allocVertex ref = do vertex <- readSTRef ref
-                             writeSTRef ref (vertex + 1)
-                             return vertex
-        memTabFind mt key = return . Map.lookup key =<< readSTRef mt
-        memTabBind key val mt = modifySTRef mt (Map.insert key val)
+unfoldST :: (Ord a) => (a -> [a]) -> [a] -> ST s (Map a Node, Gr a Int)
+unfoldST r seeds =
+    do mapRef    <- newSTRef Map.empty    -- Map from Item to Node
+       nodesRef  <- newSTRef []           -- List of Node/[Edge] pairs
+       idRef     <- newSTRef 0            -- Counter for indexing nodes
+       -- Recursively visits n
+       let visit n = 
+             do -- Test if n has already been visited
+                test <- (return . Map.lookup n =<< readSTRef mapRef)
+                case test of
+                  Just v  -> return v
+                  Nothing -> do -- Get next id for this item
+                                i <- readSTRef idRef
+                                modifySTRef idRef (+1)
+                                -- Update item/node map
+                                modifySTRef mapRef (Map.insert n i)
+                                -- Recursively visit related items
+                                ks <- mapM visit $ r n 
+                                let ns = ((i,n), [(i,k,1) | k <- ks])
+                                modifySTRef nodesRef (ns:)
+                                return i
+       -- Visit seeds
+       mapM visit seeds
+       -- Read resuls and return map/graph-pair
+       list <- readSTRef nodesRef         
+       nodeMap <- readSTRef mapRef
+       let nodes = [n | (n, _) <- list]
+       let edges = concat [es | (_, es) <- list]
+       return (nodeMap, mkGraph nodes edges)
 
 fix :: Int -> Int
 fix x | x == 0    = 10

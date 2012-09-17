@@ -49,8 +49,8 @@ main = do wne <- initializeWordNetWithOptions Nothing Nothing
           putStr "\n\n"
 
           putStr "Constructing semantic networks...\n"
-          let (adj_map, adj_g) = (let ?wne = wne in unfoldGMany (\x -> (relatedBy Similar x ++ relatedBy SeeAlso x)) (adj_pos_ss ++ adj_neg_ss))
-          let (scaleMap, scaleGraph) = (let ?wne = wne in unfoldGMany (relatedBy Similar) (intensifiers_ss ++ qualifier_ss))
+          let (adj_map, adj_g) = (let ?wne = wne in unfoldG (\x -> (relatedBy Similar x ++ relatedBy SeeAlso x)) (adj_pos_ss ++ adj_neg_ss))
+          let (scaleMap, scaleGraph) = (let ?wne = wne in unfoldG (relatedBy Similar) (intensifiers_ss ++ qualifier_ss))
           putStr $ "- Change : " ++ (show $ Map.size adj_map) ++ " concepts.\n"
           putStr $ "- Scale  : " ++ (show $ Map.size scaleMap) ++ " concepts.\n"
 

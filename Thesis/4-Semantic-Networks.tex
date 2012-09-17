@@ -151,9 +151,9 @@ Clearly the generic algorithm does not provide much use with respect to extracti
 
 	\item \emph{Verbs} are just as nouns in general handled by the generic algorithm, however \emph{linking verbs} are a special case, since they relate the subject (i.e. a entity) with one or more \emph{predicative adjectives}. Linking verbs have the category $(\cat{S}_\mathrm{dcl} \bsl \cat{NP})/(\cat{S}_\mathrm{adj} \bsl \cat{NP})$, and since the linked adjectives directly describes the subject of the phrase such verbs are simply annotated with the identity function, $\lambda x.x$. 
 
-	\item \emph{Adjectives} can have a series of different categories depending on how they participate in the sentence, however most of them have the type $\tau_\alpha \to \tau_\beta$, where $\tau_\alpha, \tau_\beta \in \mathcal{T}_\mathrm{prim}$. These are annotated with the \emph{change} of the argument, i.e. $\lambda x.x_{\circ j}$, where $j$ is a value determined based on the lemma of the adjective. Notice that this assumes implicit type conversion of the parameter from $\tau_\alpha$ to $\tau_\beta$, however since these are both primitive, this is a sane type cast. Details on how the value $j$ is calculated are given in Section~\ref{sec:sentimentValue}.
+	\item \emph{Adjectives} can have a series of different categories depending on how they participate in the sentence, however most of them have the type $\tau_\alpha \to \tau_\beta$, where $\tau_\alpha, \tau_\beta \in \mathcal{T}_\mathrm{prim}$. These are annotated with the \emph{change} of the argument, i.e. $\lambda x.x_{\circ j}$, where $j$ is a value determined based on the lemma of the adjective. Notice that this assumes implicit type conversion of the parameter from $\tau_\alpha$ to $\tau_\beta$, however since these are both primitive, this is a sane type cast. Details on how the value $j$ is calculated are given in Section~\ref{sec:sentimentAdj}.
 
-	\item \emph{Adverbs} are annotated in a fashion closely related to that of adjectives. However the result might either by a \emph{change} or a \emph{scale}, a choice determined by the lemma: normally adverbs are annotated by the change in the same manner as adjectives, however \emph{intensifiers} and \emph{qualifiers}, i.e.\ adverbs that respectively strengthened or weakened the meaning, are scaled. Section~\ref{sec:sentimentValue} gives further details on how this choice is made. Finally special care are taken about negating adverbs, i.e. ``not'', which are scaled with a value $j = -1$.
+	\item \emph{Adverbs} are annotated in a fashion closely related to that of adjectives. However the result might either by a \emph{change} or a \emph{scale}, a choice determined by the lemma: normally adverbs are annotated by the change in the same manner as adjectives, however \emph{intensifiers} and \emph{qualifiers}, i.e.\ adverbs that respectively strengthened or weakened the meaning, are scaled. Section~\ref{sec:sentimentAdverb} gives further details on how this choice is made. Finally special care are taken about negating adverbs, i.e. ``not'', which are scaled with a value $j = -1$.
 
 	\item \emph{Prepositions} and \emph{relative pronouns} need to change the impact argument as they capture partial sentences, i.e. \emph{preposition phrases} and \emph{relative clauses}, and further modification should bind to the subject entire phrase as were illustrated by Example~\ref{ex:semantics2}.
 
@@ -162,27 +162,29 @@ Clearly the generic algorithm does not provide much use with respect to extracti
 \todo[inline]{Finish ...}
 \clearpage
 
-\section{Calculating sentiment polarities}
+\section{Semantic networks}
 \label{sec:sentimentValue}
 
 In order to reason about the polarity of the entities present in the review text, a understanding of the domain of the review is needed.  For this purpose the concept of \emph{semantic networks} is introduced. Formally a semantic network is a structure cf.\ Definition~\ref{def:SemanticNetwork}.
 \begin{definition}
 a semantic network is a quadruple $(L,S,R,M)$ where:\\[-2em]
   \begin{itemize} %[labelindent=2em,labelwidth=0em,itemindent=0em,leftmargin=2em]
-    \item $L$ is the set of lexical units recognized by the network.
+    \item $L \subset \Sigma^\star$ is the set of lexical units recognized by the network.
     \item $S$ is the set of \emph{semantic concepts} in the network.
     \item $R$ is a set of binary relations on $S$ where the relation $r \in R$ describes links\\ between semantic concepts, i.e.\ $r \subset S \times S$. 
     \item $M$ is a mapping from lexical units to a set of semantic entities that the lexical\\ unit can entail, i.e.\ $M: L \to \mathcal{P}(S)$.
   \end{itemize}
   \label{def:SemanticNetwork}
+  \vspace{-1em}
   \done
 \end{definition}
+\vspace{-2em}
 
-Notice that $S$ and $R$ constitutes a set of graphs, i.e.\ for each relation $r \in R$ the graph~$(S,r)$. The graph is undirected if $r$ is \emph{symmetric}, and directed if $r$ is \emph{asymmetric}. An illustrative example of such a graph, denoting a relation in a tiny semantic network of adjective concepts is given in Figure~\ref{fig:semanticNetwork}.
+Notice that $S$ and $R$ constitutes a set of graphs, i.e.\ for each relation $r \in R$ the graph~$(S,r)$. The graph is undirected if $r$ is \emph{symmetric}, and directed if $r$ is \emph{asymmetric}. An illustrative example of such a graph, denoting a relation in a extract of a semantic network of adjective concepts is given in Figure~\ref{fig:semanticNetwork}.  Since a lexical unit might entail many different concepts cf.\ Definition~\ref{def:SemanticNetwork}, semantic concepts is described by the set of lexical unit that can entail it, each denoted with the index that uniquely identifies that meaning lexical unit. For instance in Figure~\ref{fig:semanticNetwork} the 4th meaning of \emph{olympian} entail the same semantic concept as the 1st meaning of \emph{exceptional}.
 
 \begin{figure}[ht]
   \center
-  \includegraphics[scale=.3]{Figures/Exceptional}
+  \includegraphics[scale=.27]{Figures/Exceptional}
   \caption{Illustration of relation in a semantic network.}
   \label{fig:semanticNetwork}
 \end{figure}
@@ -191,11 +193,41 @@ The concrete semantic network used is WordNet, originally presented by \citeauth
 
 WordNet contains a variety of relations, $R$, however for the purpose of calculating sentiment polarity values, only the following were considered interesting:
 \begin{itemize}
-	\item The \emph{similar}-relation links \emph{closely similar} semantic concepts, i.e.\ concepts having almost the synonymies mensing in most contexts. The relation is present for most concepts entailed by adjectives.
-	\item The \emph{see also}-relation links \emph{coarsely similar} semantic concepts, i.e.\ concepts having a clear different mensing, but may be interpreted interchangeably for some contexts. Figure~\vref{fig:semanticNetwork} shows an example of exactly the \emph{see also}-relation.
+	\item The \emph{similar}-relation, $r_\mathrm{similar}$, links \emph{closely similar} semantic concepts, i.e.\ concepts having almost the synonymies mensing in most contexts. The relation is present for most concepts entailed by adjectives.
+	\item The \emph{see also}-relation, $r_\mathrm{see\text{-}also}$, links \emph{coarsely similar} semantic concepts, i.e.\ concepts having a clear different mensing, but may be interpreted interchangeably for some contexts. Figure~\vref{fig:semanticNetwork} shows an example of exactly the \emph{see also}-relation.
+	\item The \emph{pertainym}-relation, $r_\mathrm{pertainym}$, links the adjectives from which a adverb was derived, e.g.\ \emph{extreme} is the pertainym of \emph{extremely}.
 \end{itemize}
+\vspace{1em}
+
+\section{Sentiment polarity of adjectives}
+\label{sec:sentimentAdj}
+The approach used to calculate sentiment polarity values for adjectives is very similar to the one presented by \citeauthor{valenceShifting} \shortcite{valenceShifting}, namely a domain specific set of positive and negative \emph{seed concepts} are identified, respectively $S_\mathrm{pos}$ and $S_\mathrm{neg}$. Each semantic concept in the sets can by described by a lexical unit and the specific index for that lexical unit that entail the desired concept, e.g.\ as shown in (\ref{eq:s_pos}) and (\ref{eq:s_neg}).
+\begin{align}
+	S_\mathrm{pos} &= \left\{ \text{clean}\#1, \text{quiet}\#1, \text{friendly}\#1, \text{cheap}\#1 \right\} \label{eq:s_pos}\\
+	S_\mathrm{neg} &= \left\{ \text{dirty}\#1, \text{noisy}\#1, \text{unfriendly}\#1, \text{expensive}\#1 \right\} \label{eq:s_neg}
+\end{align}
 
 
-\todo[inline]{Finish ... entities are looked up using $L$, }
+Given an adjective with lemma $\ell \in \Sigma^\star$, the set of semantic concepts that this adjective may entail, $M(\ell)$ are considered.  Since there the system only has very limited domain knowledge, namely $S_\mathrm{pos}$ and $S_\mathrm{neg}$, there is no way of choosing which of the semantic concepts that is yielded by $M(\ell)$ is the ``right'' one. The solution is simply to take the top $n$ most \emph{frequent} usage of $\ell$, which off cause assumes that such total order on $M(\ell)$ is available.
 
-%We have no way of detecting different semantic ambiguity, since we have no knowledge bade ... therefore we shall restrict our-self to 
+Finally to calculate the sentiment polarity value for $\ell$ the graph $G_\mathrm{adj}$ is considered given by (\ref{eq:g_adj}), i.e.\ the graph given by both the \emph{similar}-relation and the \emph{see also}-relation, since both closely and coarsely related concepts are considered.
+\begin{align}
+	G_\mathrm{adj} = (S, r_\mathrm{similar} \cup r_\mathrm{see\text{-}also})
+	\label{eq:g_adj}
+\end{align}
+ 
+The sentiment polarity value, $p_\mathrm{adj}(\ell)$, for the adjective with lemma $\ell$, is then given by the \emph{difference} of the sum of the \emph{normalized distances} in $G_\mathrm{adj}$, denoted $d_\mathrm{adj}$, to all negative and positive seed concepts for each of the top $n$ most \emph{frequent} usage of $\ell$, denoted by $M^n(\ell)$ cf.\ (\ref{eq:s_adj}). This follows the intuition, that positive adjectives are \emph{closer} to $S_\mathrm{pos}$ than $S_\mathrm{neg}$ and vice-verse.
+\begin{align}
+    p_\mathrm{adj}(\ell) = \left( \sum_{s \in M^n(\ell)}\sum_{s' \in S_\mathrm{neg}} d_\mathrm{adj}(s, s') \right) - \left( \sum_{s \in M^n(\ell)}\sum_{s' \in S_\mathrm{pos}} d_\mathrm{adj}(s, s') \right)
+	\label{eq:s_adj}
+\end{align}
+
+Clearly this intuition is only valid if $|S_\mathrm{pos}| = |S_\mathrm{neg}|$, or more precisely, the probability of some random semantic concept is close to a positive concept should be the same as the probability of it being close to a negative concept. Furthermore it is assumed that $d_\mathrm{adj}$ is \emph{normalized} cf.\ (\ref{eq:d_adj}), i.e. it always yields a value, such that $p_\mathrm{adj}(\ell) \in \left[-\omega; \omega \right]$.
+\begin{align}
+    d_\mathrm{adj}(s, s') \in \left[\frac{-\omega}{n\cdot|S_\mathrm{pos}|}; \frac{\omega}{n \cdot |S_\mathrm{pos}|}\right]
+    \label{eq:d_adj}
+\end{align}
+
+\section{Sentiment polarity of adverbs}
+\label{sec:sentimentAdverb}
+The approach for calculating sentiment polarity values for adverbs 

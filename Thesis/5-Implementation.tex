@@ -1,7 +1,7 @@
 %!TEX root = Thesis.tex
 
 \lstdefinelanguage{GHC}{
-	morekeywords={data,type,infix,deriving,class,where,do,instance},
+	morekeywords={let,return,data,type,infix,deriving,class,where,do,instance},
 	sensitive=true,
 	morecomment=[l]{--},
 	morestring=[b]",
@@ -154,10 +154,54 @@ The parsing of the lexicon is considered trivial, since its structure is flat wi
 \section{WordNet interface and semantic networks}
 To lookup semantic concepts and relations in the WordNet data files an open source interface library by \citeauthor{hwordnet} \shortcite{hwordnet} was used as base. However the interface was not complete, and missed critical features. For instance the library could only calculate the closure of two semantic concepts, which of cause only is possible when the relation forms a partial order, e.g.\ as is the case with the \emph{hyponym}/\emph{hypernym} relation and the \emph{holonym}/\emph{meronym} relation. Therefore the library has undergone significant rewrite and cleanup in order to use it for the presented purpose.
 
-To model semantic networks another open source library was used, namely the \emph{Functional Graph Library} (FGL). The library implements efficient functional graph representation and algorithms presented by \citeauthor{fgl} \shortcite{fgl}. However transforming the relational representation of WordNet into an actual graph in the sense of FGL is somewhat tricky. The reason for this is that intended usage of the WordNet data files do not exposes $S$, and neither $r$ in the form of a subset of $S \times S$, which makes good sense since this representation does not scale well with $|S|$. Instead it is intended to query using the lookup function, $M$, which is indexed and allows logarithmic time lookup of lexical units; likewise a relation, $\hat{r}$, is a function from one semantic concept to a set of related concepts, i.e.\ $\hat{r}: S \to \mathcal{P}(S)$. This structure makes querying WordNet efficient, but also allows some optimization with respect to calculating the sentiment polarity value of lexical units. Recall from Section~\ref{sec:sentimentValue} that the approach is to select a set of respectively positive and negative seed concepts, and then measure the difference of the sum of distances from a lexical unit to these. However instead of regard the entire graph $(S, r)$ only a subgraph $(S', r')$ is considered, namely the subgraph that constitutes the \emph{connected component} that contains all semantic concepts that are reachable from the seed concepts using the relation function $\hat{r}$. This of cause assumes that $r$ is symmetric, which is also the case for the relations considered cf.\ Section~\ref{sec:sentimentValue}.
+To model semantic networks another open source library was used, namely the \emph{Functional Graph Library} (FGL). The library implements efficient functional graph representation and algorithms presented by \citeauthor{fgl} \shortcite{fgl}. However transforming the relational representation of WordNet into an actual graph in the sense of FGL is somewhat tricky. The reason for this is that intended usage of the WordNet data files do not exposes $S$, and neither $r$ in the form of a subset of $S \times S$, which makes good sense since this representation does not scale well with $|S|$. Instead it is intended to query using the lookup function, $M$, which is indexed and allows logarithmic time lookup of lexical units; likewise a relation, $\hat{r}$, is a function from one semantic concept to a set of related concepts, i.e.\ $\hat{r}: S \to \mathcal{P}(S)$. This structure makes querying WordNet efficient, but also allows some optimization with respect to calculating the sentiment polarity value of lexical units. Recall from Section~\ref{sec:sentimentValue} that the approach is to select a set of respectively positive and negative seed concepts, and then measure the difference of the sum of distances from a lexical unit to these. However instead of regarding the entire graph $(S, r)$ only a subgraph $(S', r')$ is considered, namely the subgraph that constitutes the \emph{connected component} that contains all semantic concepts that are reachable from the seed concepts using the relation function $\hat{r}$. This of cause assumes that $r$ is symmetric, which is also the case for $r_\mathrm{similar}$ and $r_\mathrm{see\text{-}also}$ cf.\ Section~\ref{sec:sentimentValue}.
 
-The construction of $(S', r')$ for some set of positive and negative semantic concepts, respectively $P_\mathrm{seed}$ however it also makes the task of building a graph from negative  bui i.e.\ going from a set of semantic concepts $S$ and a relation $r$ to the graph $(S, r)$. The problem is that it really do not make ...  
+The construction of $(S', r')$ for some set of positive and negative semantic concepts, respectively $S_\mathrm{pos}$ and $S_\mathrm{neg}$, is denoted the \emph{unfolding} of $S_\mathrm{pos} \cup S_\mathrm{neg}$ using $\hat{r}$. It is done using simple depth first search with the set of initially ``unvisited'' semantical concepts $S_\mathrm{pos} \cup S_\mathrm{neg}$. The FGL requires nodes to be assigned a unique index, and also it is clearly neccessary to keep track of which semantical concepts has already been assigned a node in the graph, i.e.\ which nodes are considered visited. Lastely the set $S'$ and $r'$ should be incrementally build. In an imperative programming language maintaining such mutable state is straight forward, but in a purely functional programming language such as Haskell this require  . \citeauthor{st} \shortcite{st} presents a method to allow algorithms update internal state, while still externally be purely functional algorithms with absolutely no side-effects.
+
+\begin{figure}[ht]
+\begin{cframed}{\textwidth}
+\begin{lstlisting}[language=GHC]
+unfoldG :: (Ord a) => (a -> [a]) -> [a] -> (Map a Node, Gr a Int)
+unfoldG r seeds = runST ( unfoldST r seeds )
+
+unfoldST :: (Ord a) => (a -> [a]) -> [a] -> ST s (Map a Node, Gr a Int)
+unfoldST r seeds =
+    do mapRef    <- newSTRef Map.empty    -- Map from Item to Node
+       nodesRef  <- newSTRef []           -- List of Node/[Edge] pairs
+       idRef     <- newSTRef 0            -- Counter for indexing nodes
+       -- Recursively visits n
+       let visit n = 
+             do -- Test if n has already been visited
+                test <- (return . Map.lookup n =<< readSTRef mapRef)
+                case test of
+                  Just v  -> return v
+                  Nothing -> do -- Get next id for this item
+                                i <- readSTRef idRef
+                                modifySTRef idRef (+1)
+                                -- Update item/node map
+                                modifySTRef mapRef (Map.insert n i)
+                                -- Recursively visit related items
+                                ks <- mapM visit $ r n 
+                                let ns = ((i,n), [(i,k,1) | k <- ks])
+                                modifySTRef nodesRef (ns:)
+                                return i
+       -- Visit seeds
+       mapM visit seeds
+       -- Read resuls and return map/graph-pair
+       list <- readSTRef nodesRef         
+       nodeMap <- readSTRef mapRef
+       let nodes = [n | (n, _) <- list]
+       let edges = concat [es | (_, es) <- list]
+       return (nodeMap, mkGraph nodes edges)
+\end{lstlisting}  
+\end{cframed}
+\caption{Example of parsing categorial expression.}
+\label{fig:categoryExpression}
+\end{figure}
 
 \todo[inline]{Finish}
 
 %... the function for calculating the closure of synsets $S$ for some relatrion $R$ does not terminate if $R$ is symmetric. Since several semantic relations are symmetric (e.g. synonyms, antonyms)
+
+
+Note: Appendix med kildekode -- komplet oversigt over filer / ansvar -- Udvalgte filer inkluderet.
