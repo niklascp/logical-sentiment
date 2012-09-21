@@ -2,10 +2,13 @@
 
 module Annotate where
 
-import Data.Graph.Inductive
+import Control.Monad.ST
+import Data.STRef
+import Data.List (sort)
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe
+import Data.Graph.Inductive
 
 import CCG
 import WordNet hiding (Word)
@@ -17,6 +20,67 @@ data AnnotationEnv = AnnotationEnv {
      adjFun :: [SearchResult] -> Float,  -- rename to adjChange?
      scaleFun :: [SearchResult] -> Float -- rename to adjScale?
 }
+
+-- Parameters for the annotation
+omega = 100
+n = 2
+
+-- Unfolding of graphs
+unfoldG :: (Ord a) => (a -> [a]) -> [a] -> (Map a Node, Gr a Int)
+unfoldG r seeds = runST ( unfoldST r seeds )
+
+unfoldST :: (Ord a) => (a -> [a]) -> [a] -> ST s (Map a Node, Gr a Int)
+unfoldST r seeds =
+    do mapRef    <- newSTRef Map.empty    -- Map from Item to Node
+       nodesRef  <- newSTRef []           -- List of Node/[Edge] pairs
+       idRef     <- newSTRef 0            -- Counter for indexing nodes
+       -- Recursively visits n
+       let visit n = 
+             do -- Test if n has already been visited
+                test <- (return . Map.lookup n =<< readSTRef mapRef)
+                case test of
+                  Just v  -> return v
+                  Nothing -> do -- Get next id for this item
+                                i <- readSTRef idRef
+                                modifySTRef idRef (+1)
+                                -- Update item/node map
+                                modifySTRef mapRef (Map.insert n i)
+                                -- Recursively visit related items
+                                ks <- mapM visit $ r n 
+                                let ns = ((i,n), [(i,k,1) | k <- ks])
+                                modifySTRef nodesRef (ns:)
+                                return i
+       -- Visit seeds
+       mapM visit seeds
+       -- Read resuls and return map/graph-pair
+       list <- readSTRef nodesRef         
+       nodeMap <- readSTRef mapRef
+       let nodes = [n | (n, _) <- list]
+       let edges = concat [es | (_, es) <- list]
+       return (nodeMap, mkGraph nodes edges)
+
+-- | Polarity value for adjective graphs
+pAdj :: Real b => Gr a b -> [Node] -> [Node] -> [Node] -> Float
+pAdj gr pns nns qns = (sum $ distAdj nns qns) - (sum $ distAdj pns qns)
+                      where
+                        distAdj :: [Node] -> [Node] -> [Float]
+                        distAdj sns qns = take n $ sort [normAdj (length (sp sn qn gr) - 1) | sn <- sns, qn <- qns]
+                        
+                        normAdj :: Int -> Float
+                        normAdj x | x < 0 || x > 10 = omega / (fromIntegral n)
+                                  | otherwise       = (fromIntegral x / 10) * (omega / (fromIntegral n))
+
+-- | Polarity value for scale graphs
+pScale :: Real b => Gr a b -> [Node] -> [Node] -> [Node] -> Float
+pScale gr pns nns qns = 2**(sum $ distScale nns qns) - (sum $ distScale pns qns)
+                        where
+                          distScale :: [Node] -> [Node] -> [Float]
+                          distScale sns qns = take n $ sort [normScale (length (sp sn qn gr) - 1) | sn <- sns, qn <- qns]
+                          
+                          normScale :: Int -> Float
+                          normScale x | x < 0 || x > 10 = 1 / (fromIntegral n)
+                                      | otherwise       = (fromIntegral x / 10) * (1 / (fromIntegral n))
+
 
 concat2 :: [[a]] -> [a]
 concat2 [] = []
@@ -101,6 +165,25 @@ annotateAny _ w@(Word { token = t, category = c, lemma = l }) =
                  if cond2 then map (\(t', c') -> if arg a =? Just c' then (App t t', fromJust $ res a) else (t', c')) ts else
                  (t,a):ts
                  
+      in 
+        Abs v (constructTerm vs (term) r) 
+
+-- | Special annotation for C&C ltc-rule
+annotateLtc _ w@(Word { token = t, category = c, lemma = l }) =
+  w { expr = constructTerm xyzVars [] c }
+  where 
+    constructTerm :: [String] -> [(SExpr, Category)] -> Category -> SExpr
+    constructTerm vs ts c = case c of
+      r :\ a -> constructAbstraction vs ts a r
+      r :/ a -> constructAbstraction vs ts a r
+      _      -> Seq $ reverse $ [v | (v, _) <- ts]
+
+    constructAbstraction :: [String] -> [(SExpr, Category)] -> Category -> Category -> SExpr
+    constructAbstraction (v:vs) ts a r = -- a = tau_alpha, r = tau_beta
+      let t = Var v -- NP
+          cond = any (\(_, t) -> (Just a) =? arg t) ts -- types where a migth be used as argument
+          term = if cond then map (\(t', c') -> if Just a =? arg c' then (App t' t, fromJust $ res c') else (t', c')) ts else
+                 (t,a):ts                 
       in 
         Abs v (constructTerm vs (term) r) 
 

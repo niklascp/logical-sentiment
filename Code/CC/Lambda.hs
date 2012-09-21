@@ -67,7 +67,7 @@ reduce (Change (Abs x t) j')      = Abs x $ reduce $ Change t j'
 reduce (Change t j)               = if (t /= t') then (reduce $ Change t' j) else (Change t' j)
                                     where t' = reduce t
 -- FS1, FC2, SS and PS rules:
-reduce (Scale (Fun f j 0 ts) j')  = Fun f (j * j') 0 $ map reduce ts
+reduce (Scale (Fun f j 0 ts) j')  = Fun f (if j == 0 then j' else j * j') 0 $ map reduce ts
 reduce (Scale (Fun f j k ts) j')  = Fun f j k $ map reduce $ (take (k - 1) ts) ++ [Scale (ts !! (k - 1)) j'] ++ (drop k ts)
 reduce (Scale (Seq ts) v)         = Seq $ map (reduce . flip Scale v) ts
 reduce (Scale (Abs x t) v)        = Abs x $ reduce $ Scale t v

@@ -4,6 +4,7 @@ module CCG (
   module Lambda,
   module CCG
 ) where
+import Data.Char
 
 import Unification
 import Lambda
@@ -46,7 +47,12 @@ data Feature = Masc  | Fem  | Neutr | MascOrFem   -- Gender
              | Tense | Infl
              | On    | With | By | To | From      -- Preposition
              | SDcl  | SAdj | SNb  | SNg  | SPt | SInv | SPss | SB | SEm   -- Sentence Type
-             | Unknown String
+             | FThr
+             | FWq
+             | FQ
+             | FFor
+             | FQem
+             | FVar String
              deriving (Eq,Show)
 
 data PTree = PWord Word
@@ -106,16 +112,25 @@ res _      = Nothing
 -- args (x:/_) = 1 + (args x)
 -- args _      = 0;
 
-term :: PTree -> SExpr
-term (PWord w) = expr w
-term (PFwdApp _ t _ _) = t
-term (PBwdApp _ t _ _) = t
-term (PFwdComp _ t _ _) = t
-term (PBwdComp _ t _ _) = t
-term (PBwdXComp _ t _ _) = t
-term (PFwdTR _ t _) = t
-term (PNounRaise _ t _) = t
+nodeExpr :: PTree -> SExpr
+nodeExpr (PWord w) = expr w
+nodeExpr (PFwdApp _ t _ _) = t
+nodeExpr (PBwdApp _ t _ _) = t
+nodeExpr (PFwdComp _ t _ _) = t
+nodeExpr (PBwdComp _ t _ _) = t
+nodeExpr (PBwdXComp _ t _ _) = t
+nodeExpr (PFwdTR _ t _) = t
+nodeExpr (PNounRaise _ t _) = t
 
+nodeCategory :: PTree -> Category
+nodeCategory (PWord w)           = category w
+nodeCategory (PFwdApp c _ _ _)   = c
+nodeCategory (PBwdApp c _ _ _)   = c
+nodeCategory (PFwdComp c _ _ _)  = c
+nodeCategory (PBwdComp c _ _ _)  = c
+nodeCategory (PBwdXComp c _ _ _) = c
+nodeCategory (PFwdTR c _ _)      = c
+nodeCategory (PNounRaise c _ _)  = c
 
 
 -- Pretty printing of data structures
@@ -187,13 +202,5 @@ instance Pretty Agreement where
   render _                      = []
 
 instance Pretty Feature where
-  render SDcl    = "dcl" 
-  render SAdj    = "adj"
-  render SNb     = "nb"
-  render SNg     = "ng"
-  render SPt     = "pt"
-  render SInv    = "inv"
-  render SPss    = "pss"
-  render SB      = "b"
-  render (Unknown x) = x
-  render f      = show f
+  render (FVar x) = x
+  render f      = map toLower $ drop 1 $ show f

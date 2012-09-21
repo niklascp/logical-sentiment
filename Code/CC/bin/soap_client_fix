@@ -1,0 +1,2 @@
+#!/bin/sh
+(read i; echo $i) | bin/soap_client $*
