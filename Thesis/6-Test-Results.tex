@@ -16,17 +16,16 @@ The test data set chosen for evaluation of the system is the \emph{Opinosis Data
 
 After a coarse review of the data set it is safe to argue that the data set chosen for evaluation indeed includes all of the problematics discussed in Section~\vref{sec:realData}. Since the data set is unlabeled is was chosen to label a small subset of it in order to measure the robustness and the correctness of the presented solution. To avoid biases toward how the proof of concept system analyzes text the labeling was performed independently by two individuals which had no knowledge of how the presented solution processes texts. As the example texts throughout this thesis might have hinted, the subset chosen was from the set of hotel and restaurant reviews. It was of cause a subset that had not previously been used to test the implementation during development, however fixing the evaluation on the domain of hotel and restaurant reviews allowed the choice of relevant seed concepts cf.\ Section~\ref{sec:sentimentAdj}. The \emph{subject of interest} chosen for the analysis were \emph{rooms}, and the subset was thus randomly sampled from text containing this entity (in any morphological form), since there otherwise are no chance the proof of concept system can yield a result for the text.
 
-The individuals were given a subset of 35 review texts, and should mark each text as either positive, negative or unknown \emph{with respect to the given subject of interest}. Out of the 35 review text the two subject's positive/negative labeling agreed on 34 of them, while unknowns and disagreements were discarded. Thus the inter-human \emph{concordance} for the test data set is $97.1\%$, which is very high, and would arguable drop significantly if more than two individuals were used for label annotation. The full subset samples, as well as each subjects marking is available in Table~\ref{table:labeling} in Appendix~\ref{chap:testData}.
+The individuals were given a subset of 35 review texts, and should mark each text as either positive, negative or unknown \emph{with respect to the given subject of interest}. Out of the 35 review text the two subject's positive/negative labeling agreed on 34 of them, while unknowns and disagreements were discarded. Thus the inter-human \emph{concordance} for the test data set is $97.1\%$, which is very high, and would arguable drop significantly if just a few more individuals were used for label annotation. The full subset samples, as well as each subjects marking is available in Table~\ref{table:labeling} in Appendix~\ref{chap:testData}.
 
 \section{Test results}
-The test data set was processed by the proof of concept system, and the raw results are also available Table~\ref{table:labeling}. The system was able to yield an sentiment value for the ``room'' entity for only $32.4\%$ of the test text. Table~\ref{table:results} shows the precision and recall results. As seen the recall is very low, which is addressed in a moment, while it is argued that precision is acceptable. 
-
+The test data set was processed by the proof of concept system and the system was able to yield an sentiment value for the ``room'' entity for just $32.4\%$ of the test text. A entity sentiment value is considered to \emph{agree} with the human labeling, if had the correct sign (i.e. positive sentiment values agreed with positive labels, and negative values with negative labels). As mentioned it is hard to compare the results to any baseline, since no published results has been obtainable for entity-level sentiment analysis. The baseline presented here is thus a sentence-level baseline, calculated by using the Natural Language Toolkit (NLTK) for Python using a Naive Bayes Classifier (trained on movie reviews though rather then hotel reviews). Both the raw sentiment values calculated by the presented solution, and the baseline classification is also available and the raw results are also available Table~\ref{table:labeling}. Table~\ref{table:results} shows the precision and recall results for both the baseline, and the presented solution. As seen the recall is somewhat low for the presented solution, which is addressed in a moment, while it is argued that precision is acceptable, since a precision. 
 \begin{table}[ht]
 \center
-\begin{tabular}{l|r}
-	          & Result \\ \hline
-	Precision & $81.8\%$ \\
-	Recall    & $26.5\%$ 
+\begin{tabular}{l|rr}
+	          & Baseline & Entity-level \\ \hline
+	Precision & $71.5\%$ & $90.1\%$ \\
+	Recall    & $44.1\%$ & $29.4\%$ 
 \end{tabular}
 \caption{Precision and recall results for proof of concept system.}
 \label{table:results}

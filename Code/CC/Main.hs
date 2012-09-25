@@ -37,9 +37,19 @@ analyse annotationAlgorithm ccEnv subject (sentence, index) = do
   if (isJust tree) then do
     let sexpr = nodeExpr $ fromJust tree
     putStr $ show sexpr
-    return (Just $ sum $ extract subject sexpr)
+    let r = extract subject sexpr
+    let m = (maximum r) + (abs (minimum r))
+    if (null r) then return Nothing
+    else if (m > 0) then
+      return $ Just (maximum r)
+    else if (m < 0) then
+      return $ Just (minimum r)
+    else
+      return Nothing
   else
     return Nothing
+
+
 
 main :: IO ()
 main = do wne <- initializeWordNetWithOptions Nothing Nothing          
@@ -100,8 +110,8 @@ main = do wne <- initializeWordNetWithOptions Nothing Nothing
           }
 
           -- Load review data
-          --reviewData <- liftM lines $ readFile "../Data/rooms_swissotel_chicago_a.txt"           
-          let reviewData = ["Expensive parking but great rooms ."]
+          reviewData <- liftM lines $ readFile "../Data/rooms_swissotel_chicago_a.txt"           
+          --let reviewData = ["Expensive parking but great rooms ."]
           result <- mapM (analyse (annotateWord env) ccEnv "room") $ zip reviewData [1..]
           -- Just tree <- runCcEnv ccEnv (annotateWord env) "The rooms were sleek and cool , great views ."
           -- latexify tree
