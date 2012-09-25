@@ -1,21 +1,13 @@
 %!TEX root = Thesis.tex
-
-\lstdefinelanguage{GHC}{
-	morekeywords={let,return,data,type,infix,deriving,class,where,do,instance},
-	sensitive=true,
-	morecomment=[l]{--},
-	morestring=[b]",
-}
-
 \chapter{Implementation}
 \label{chap:implementation}
 
-In order to demonstrate the logical approach, introduced in the previous chapters, a \emph{proof of concept} system was implemented. In the following sections key aspects of the implementation of this system will be presented. A complete walk-though will not be presented, but the complete source code for the implementation is available in Appendix~\ref{code}. Also notice that code segments presented in this chapter maybe simplified from the source code to ease understanding. For instance the C\&C-toolchain uses some additional primitive categories to handle conjunctions, commas and punctuations that are not consider theoretical or implementationwise interesting, as they are translatable to the set of categories already presented. In the actual implementation of the proof of concept system this is exactly what is done, once the output from the C\&C-toolchain has been parsed.
+In order to demonstrate the logical approach, introduced in the previous chapters, a \emph{proof of concept} system was implemented. In the following sections key aspects of the implementation of this system will be presented. A complete walk-though will not be presented, but the complete source code for the implementation is available in Appendix~\ref{source}. Also notice that code segments presented in this chapter maybe simplified from the source code to ease understanding. For instance the C\&C-toolchain uses some additional primitive categories to handle conjunctions, commas and punctuations that are not consider theoretical or implementationwise interesting, as they are translatable to the set of categories already presented. In the actual implementation of the proof of concept system this is exactly what is done, once the output from the C\&C-toolchain has been parsed.
 
-It was chosen to use the purely functional programming language \emph{Haskell} for implementing the proof of concept system. The reason Haskell, specifically the \emph{Glasgow Haskell Compiler}, was chosen as programming language and platform, was i.a.\ its ability to elegantly and effectively implement a parser for the output of the C\&C-toolchain. Data structures are like in many other functional languages also possible to state in a very succinct and neat manner, which allow Haskell to model the extended semantics presented in Section~\ref{sec:extendingSemantics}, as well as any other structure presented, e.g.\ deduction proofs, lexical and phrasal categories, etc.
+It was chosen to use the purely functional, non-strict programming language \emph{Haskell} for implementing the proof of concept system. The reason Haskell, specifically the \emph{Glasgow Haskell Compiler}, was chosen as programming language and platform, was i.a.\ its ability to elegantly and effectively implement a parser for the output of the C\&C-toolchain. Data structures are like in many other functional languages also possible to state in a very succinct and neat manner, which allow Haskell to model the extended semantics presented in Section~\ref{sec:extendingSemantics}, as well as any other structure presented, e.g.\ deduction proofs, lexical and phrasal categories, etc.
 
 \section{Data structures}
-Data structures are stated in Haskell by the means of \emph{type constructors} and \emph{data constructors}. To model for instance lexical and phrasal categories the two infix operators, \texttt{:/} and \texttt{:\textbackslash} are declared (using \texttt{/} and \texttt{\textbackslash} was not considered wise, as \texttt{/} is already used for devision by the Haskell Prelude) as shown in Figure~\ref{fig:categoryDataType}. The \emph{agreement} of an primitive category is simply a set of features cf. Section~\ref{sec:featuresAgreement}, which is easiest modeled using the list structure. As features are just values from some language specific finite set they are simply modeled by \emph{nullary data constructors}. One might argue that features have \emph{different} types, e.g.\ person, number, gender, etc. However it is convenient to simply regard all features as being of the \emph{same} type, a model borrow from \citeauthor{cs} \shortcite[chap.~9]{cs}. %Finally a category can by one of the four primitive categories, which are all \emph{unary data constructors} since they carry agreement, or a compound category using one of the infix operators.
+Data structures are stated in Haskell by the means of \emph{type constructors} and \emph{data constructors}. To model for instance lexical and phrasal categories the two infix operators, \texttt{:/} and \texttt{:\textbackslash} are declared (using \texttt{/} and \texttt{\textbackslash} was not considered wise, as \texttt{/} is already used for devision by the Haskell Prelude) as shown in Figure~\ref{fig:categoryDataType}. The \emph{agreement} of an primitive category is simply a set of features cf. Section~\ref{sec:featuresAgreement}, which is easiest modeled using the list structure. As features are just values from some language specific finite set they are simply modeled by \emph{nullary data constructors}. One might argue that features have \emph{different} types, e.g.\ person, number, gender, etc. However it is convenient to simply regard all features as being of the \emph{same} type, a model borrowed from \citeauthor{cs} \shortcite[chap.~9]{cs}. %Finally a category can by one of the four primitive categories, which are all \emph{unary data constructors} since they carry agreement, or a compound category using one of the infix operators.
 
 \begin{figure}[ht]
 \begin{cframed}{.9\textwidth}
@@ -85,8 +77,10 @@ reduce (Change (Abs x t) j') =
 \end{figure}
 \vspace{-1em}
 
-\section{Parsing output from the C\&C tools}
-The implemented parser for the Prolog style output yielded by the C\&C-toolchain, presented briefly in Section~\ref{sec:annotatingLexicon}, uses the \textsc{Parsec} library for Haskell by \citeauthor{parsec} \shortcite{parsec}. \textsc{Parsec} is a strong monadic parser combinator, that among other things allows fast and efficient parsing of LL[1] grammars, and can thus easily capture the subset of the Prolog language used by the C\&C-toolchain. \textsc{Parsec} differs significantly from common \textsc{Yacc} approaches, since it describes the grammar \emph{directly} in Haskell, without the need of some intermediate language or processing tools.
+\section{Interacting with the C\&C toolchain}
+When processing multiple texts the most effective way of interaction with the C\&C toolchain is by running a server instance of it, since this allows the toolchain to only load the trained models once (which are quite large). The server can be interacted with through a \emph{SOAP web service} \cite{soap}. It seem a somewhat strange choice that \citeauthor{candc} choose to base the communication with the server on SOAP, since the only data structure ever exchanged is single strings (the text to parse as input, and the raw \emph{Prolog style} string as output). It was chosen not to interact directly with the web service from Haskell, since no mature SOAP libraries are currently available natively for Haskell. Instead it was chosen to use a small client program distributed along with the C\&C tools, allowing communication with the SOAP web service through the clients standard input/output.
+
+The implemented parser for the Prolog style output yielded by the C\&C toolchain, presented briefly in Section~\ref{sec:annotatingLexicon}, uses the \textsc{Parsec} library for Haskell by \citeauthor{parsec} \shortcite{parsec}. \textsc{Parsec} is a strong monadic parser combinator, that among other things allows fast and efficient parsing of LL[1] grammars, and can thus easily capture the subset of the Prolog language used by the C\&C-toolchain. \textsc{Parsec} differs significantly from common \textsc{Yacc} approaches, since it describes the grammar \emph{directly} in Haskell, without the need of some intermediate language or processing tools.
 
 Figure~\ref{fig:candcOutputReal} shows the actual raw output from the C\&C-toolchain that is the basis the illustration in Figure~\ref{fig:candcOutput} shown back in Section~\ref{sec:annotatingLexicon}. The first section of the output represents the deduction tree, while the second represents the lexicon (obviously without semantic expressions).
 
@@ -143,65 +137,65 @@ pCategory =         pParens pCategoryExpr
 \caption{Example of parsing categorial expression.}
 \label{fig:categoryExpression}
 \end{figure}
-\vspace{1em}
 
-The parsing of the lexicon is considered trivial, since its structure is flat with the exception of the category. ...
+The parsing of the lexicon is considered trivial, since its structure is flat with the exception of the category. The parser for the deduction proof is simply stated by two abstract rules, unary (e.g.\ for capturing type-raise) and binary (e.g.\ for capturing functional application), along with a top-rule for choosing specific instances of the rules. Besides this there is several rules for handling C\&C's relatively verbose rules for coordination, especially in connection with commas and punctuations.
 
-\todo[inline]{Finish}
-
-\vspace{7em}
 
 \section{WordNet interface and semantic networks}
 To lookup semantic concepts and relations in the WordNet data files an open source interface library by \citeauthor{hwordnet} \shortcite{hwordnet} was used as base. However the interface was not complete, and missed critical features. For instance the library could only calculate the closure of two semantic concepts, which of cause only is possible when the relation forms a partial order, e.g.\ as is the case with the \emph{hyponym}/\emph{hypernym} relation and the \emph{holonym}/\emph{meronym} relation. Therefore the library has undergone significant rewrite and cleanup in order to use it for the presented purpose.
 
 To model semantic networks another open source library was used, namely the \emph{Functional Graph Library} (FGL). The library implements efficient functional graph representation and algorithms presented by \citeauthor{fgl} \shortcite{fgl}. However transforming the relational representation of WordNet into an actual graph in the sense of FGL is somewhat tricky. The reason for this is that intended usage of the WordNet data files do not exposes $S$, and neither $r$ in the form of a subset of $S \times S$, which makes good sense since this representation does not scale well with $|S|$. Instead it is intended to query using the lookup function, $M$, which is indexed and allows logarithmic time lookup of lexical units; likewise a relation, $\hat{r}$, is a function from one semantic concept to a set of related concepts, i.e.\ $\hat{r}: S \to \mathcal{P}(S)$. This structure makes querying WordNet efficient, but also allows some optimization with respect to calculating the sentiment polarity value of lexical units. Recall from Section~\ref{sec:sentimentValue} that the approach is to select a set of respectively positive and negative seed concepts, and then measure the difference of the sum of distances from a lexical unit to these. However instead of regarding the entire graph $(S, r)$ only a subgraph $(S', r')$ is considered, namely the subgraph that constitutes the \emph{connected component} that contains all semantic concepts that are reachable from the seed concepts using the relation function $\hat{r}$. This of cause assumes that $r$ is symmetric, which is also the case for $r_\mathrm{similar}$ and $r_\mathrm{see\text{-}also}$ cf.\ Section~\ref{sec:sentimentValue}.
 
-The construction of $(S', r')$ for some set of positive and negative semantic concepts, respectively $S_\mathrm{pos}$ and $S_\mathrm{neg}$, is denoted the \emph{unfolding} of $S_\mathrm{pos} \cup S_\mathrm{neg}$ using $\hat{r}$. It is done using simple depth first search with the set of initially ``unvisited'' semantical concepts $S_\mathrm{pos} \cup S_\mathrm{neg}$. The FGL requires nodes to be assigned a unique index, and also it is clearly neccessary to keep track of which semantical concepts has already been assigned a node in the graph, i.e.\ which nodes are considered visited. Lastely the set $S'$ and $r'$ should be incrementally build. In an imperative programming language maintaining such mutable state is straight forward, but in a purely functional programming language such as Haskell this require  . \citeauthor{st} \shortcite{st} presents a method to allow algorithms update internal state, while still externally be purely functional algorithms with absolutely no side-effects.
+The construction of $(S', r')$ for some set of positive and negative semantic concepts, respectively $S_\mathrm{pos}$ and $S_\mathrm{neg}$, is denoted the \emph{unfolding} of $S_\mathrm{pos} \cup S_\mathrm{neg}$ using $\hat{r}$. It is done using simple depth first search with the set of initially ``unvisited'' semantic concepts $S_\mathrm{pos} \cup S_\mathrm{neg}$. The FGL requires nodes to be assigned a unique index, and it is also clearly necessary to keep track of which semantical concepts has already been assigned a node in the graph, i.e.\ which nodes are considered visited. Lastly the set $S'$ and $r'$ should be build incrementally. In an imperative programming language maintaining such mutable state is straight forward, but in a purely functional programming language such as Haskell this require somewhat advanced techniques if it should be implemented efficiently. \citeauthor{st} \shortcite{st} presents a method to allow functional algorithms to update internal state, while still externally be purely functional algorithms with absolutely no side-effects. An implementation of \citeauthor{st}'s method is available in Haskell through \emph{strict state threads} and the \emph{strict state-transformer monad}. 
+
+Figure~\ref{fig:st} shows the Haskell code for unfolding semantic graphs. The actual unfolding are done by the function \texttt{unfoldST}, which yields a state transformer with computation result of \texttt{(Map a Node, Gr a Int)}, i.e.\ a map from the type of items to unfold, \texttt{a}, (e.g. semantic concepts) to nodes in the FGL graph and the actual FGL graph with nodes of type \texttt{a} and edges simply with integer weights (all edges have weight 1).
+
+Since the \texttt{ST} structure conforms to the laws of monads \emph{state transformation computations} can be chained into a pipeline, and thus even though the code for the algorithm might look almost imperatively, it is indeed purely functional. Initially three \emph{references} to mutable state are constructed given each of the states an initial value. The \texttt{visit} function simply ``visits'' a item (e.g. semantic concept): if the item has already been visited, the unique index for its corresponding node in the FGL graph is simply returned; otherwise a new unique node index is allocated and outgoing relations from this item are visited by recursive calls. Mutable states can by modified by the \texttt{modifySTRef} function, which takes a reference to the state to modify, and a \emph{transformation} function over the state. When the depth first search finishes, the map and FGL graph are returned as non-mutable structures as the result of the computation.
 
 \begin{figure}[ht]
 \begin{cframed}{\textwidth}
 \begin{lstlisting}[language=GHC]
+-- | Unfold the a graph using the given relation and seeds.
 unfoldG :: (Ord a) => (a -> [a]) -> [a] -> (Map a Node, Gr a Int)
-unfoldG r seeds = runST ( unfoldST r seeds )
+unfoldG r seeds = runST $ unfoldST r seeds
 
+-- | State trasformer for unfolding graphs.
 unfoldST :: (Ord a) => (a -> [a]) -> [a] -> ST s (Map a Node, Gr a Int)
 unfoldST r seeds =
-    do mapRef    <- newSTRef Map.empty    -- Map from Item to Node
-       nodesRef  <- newSTRef []           -- List of Node/[Edge] pairs
-       idRef     <- newSTRef 0            -- Counter for indexing nodes
-       -- Recursively visits n
-       let visit n = 
-             do -- Test if n has already been visited
-                test <- (return . Map.lookup n =<< readSTRef mapRef)
-                case test of
-                  Just v  -> return v
-                  Nothing -> do -- Get next id for this item
-                                i <- readSTRef idRef
-                                modifySTRef idRef (+1)
-                                -- Update item/node map
-                                modifySTRef mapRef (Map.insert n i)
-                                -- Recursively visit related items
-                                ks <- mapM visit $ r n 
-                                let ns = ((i,n), [(i,k,1) | k <- ks])
-                                modifySTRef nodesRef (ns:)
-                                return i
-       -- Visit seeds
-       mapM visit seeds
-       -- Read resuls and return map/graph-pair
-       list <- readSTRef nodesRef         
-       nodeMap <- readSTRef mapRef
-       let nodes = [n | (n, _) <- list]
-       let edges = concat [es | (_, es) <- list]
-       return (nodeMap, mkGraph nodes edges)
+  do mapRef    <- newSTRef Map.empty    -- Map from Item to Node
+     nodesRef  <- newSTRef []           -- List of Node/[Edge] pairs
+     idRef     <- newSTRef 0            -- Counter for indexing nodes
+     -- Recursively visits n
+     let visit n = 
+           do -- Test if n has already been visited
+              test <- (return . Map.lookup n =<< readSTRef mapRef)
+              case test of
+                Just v  -> return v
+                Nothing -> 
+                  do -- Get next id for this item
+                     i <- readSTRef idRef
+                     modifySTRef idRef (+1)
+                     -- Update item/node map
+                     modifySTRef mapRef (Map.insert n i)
+                     -- Recursively visit related items
+                     ks <- mapM visit $ r n 
+                     let ns = ((i,n), [(i,k,1) | k <- ks])
+                     modifySTRef nodesRef (ns:)
+                     return i
+     -- Visit seeds
+     mapM visit seeds
+     -- Read resuls and return map/graph-pair
+     list <- readSTRef nodesRef         
+     nodeMap <- readSTRef mapRef
+     let nodes = [n | (n, _) <- list]
+     let edges = concat [es | (_, es) <- list]
+     return (nodeMap, mkGraph nodes edges)
 \end{lstlisting}  
 \end{cframed}
-\caption{Example of parsing categorial expression.}
-\label{fig:categoryExpression}
+\caption{Example of usage of strict state threads.}
+\label{fig:st}
 \end{figure}
+\clearpage
 
-\todo[inline]{Finish}
-
-%... the function for calculating the closure of synsets $S$ for some relatrion $R$ does not terminate if $R$ is symmetric. Since several semantic relations are symmetric (e.g. synonyms, antonyms)
-
-
-Note: Appendix med kildekode -- komplet oversigt over filer / ansvar -- Udvalgte filer inkluderet.
+\section{Complexity analysis}
+Hvis jeg får tid...

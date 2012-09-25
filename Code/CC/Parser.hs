@@ -1,6 +1,5 @@
 {-# LANGUAGE ImplicitParams #-}
 module Parser (
-    Lexicon,
     parseLexicon,
     parseTree,
 
@@ -26,8 +25,6 @@ import GHC.IO.Handle
 -- Data Structures
 import CCG
 import Annotate
-
-type Lexicon = [Word]
 
 pLexicon :: Parser [Word]
 pLexicon = pLexiconEntry `endBy` newline
@@ -67,9 +64,7 @@ pSubtree l = do     try (pBRule l "fa"  $ \c t1 t2 -> PFwdApp   c (reduce $ App 
                 <|> try (pBRule l "bc"  $ \c t1 t2 -> PBwdComp  c (reduce $ Abs "x" $ App (nodeExpr t2) (App (nodeExpr t1) (Var "x"))) t1 t2 )
                 <|> try (pBRule l "bx"  $ \c t1 t2 -> PBwdXComp c (reduce $ Abs "x" $ App (nodeExpr t2) (App (nodeExpr t1) (Var "x"))) t1 t2 )
                 <|> try (pURule l "tr"  $ \c t     -> PFwdTR    c (reduce $ Abs "f" (App (Var "f") $ nodeExpr t)) t )
-                -- <|> try (pURule l "ltc" $ \c t     -> PFwdTR    c (reduce $ Abs "x" (Seq [Var "x", nodeExpr t])) t )
                 <|> try (pConj l)
-                -- <|> try (pConj' l)
                 <|> try (pConj'' l)
                 <|> try (pConj''' l)
                 <|> try (pLex l)
@@ -96,43 +91,6 @@ pBRule l f r = do (string f)
                   (string ")")
                   return $ r c t1 t2
 
-annotateConj :: Category -> Word -> Word
-annotateConj cat w@(Word { lemma = l }) =
-  w { expr = Abs "x" $ Abs "y" $ constructTerm [] cat }
-  where 
-    newVar used = head $ dropWhile (`elem` used) $ (iterate (++ "'") "z")
-    constructTerm :: [String] -> Category -> SExpr
-    constructTerm used c = case c of
-      a :\ _ -> let v = newVar used in Abs v (constructTerm (v:used) a)
-      a :/ _ -> let v = newVar used in Abs v (constructTerm (v:used) a)
-      _      -> Seq $ map (\term -> foldr (flip App) term $ map Var used) [Var "x", Var "y"]
-
-
-flatten :: Category -> [Category]
-flatten (a :\ b) = b:flatten a
-flatten (a :/ b) = b:flatten a
-flatten a        = [a]
-
-annotateConj' :: Word -> Word
-annotateConj' w@(Word { lemma = l, category = c }) =
-  let f = flatten c
-      c1 = f !! 0
-      c2 = f !! 1
-      cr = f !! 2
-  in
-    case length f of
-      1 -> error "Annotate Conj: We espect least t -> t."
-      2 -> w { expr = lid }  -- Dummy conjection, just return identity, for instance , and . in "funny , and happy ."
-      _ -> w { expr = Abs "x" $ Abs "y" $ constructTerm [] c2 }     
-  where 
-    newVar used = head $ dropWhile (`elem` used) $ zVars
-    constructTerm :: [String] -> Category -> SExpr
-    constructTerm used c = case c of
-      a :\ _ -> let v = newVar used in Abs v (constructTerm (v:used) a)
-      a :/ _ -> let v = newVar used in Abs v (constructTerm (v:used) a)
-      _      -> Seq $ map (\term -> foldr (flip App) term $ reverse $ map Var used) [Var "x", Var "y"]
-
-
 pConj :: Lexicon -> Parser PTree
 pConj l = do r <- (try (string "conj") <|> (string "lp"))
              (string "('")
@@ -153,27 +111,6 @@ pConj l = do r <- (try (string "conj") <|> (string "lp"))
                unexpected ("Left child of a conjunction rule '" ++ r ++ "' should be a word.")
              else
                return $ PFwdApp c2 (reduce $ App (nodeExpr (fromJust t1')) (nodeExpr t2)) (fromJust t1') t2
-
--- TODO : REWRITE THESE PUNCTIATION RULES
-
--- pConj' :: Lexicon -> Parser PTree
--- pConj' l = do (string "lp")
---               (string "('")
---               t <- pToken
---               (string "','")
---               c1 <- pCategoryExpr
---               (string "','")
---               c2 <- pCategoryExpr
---               (string "',")
---               t1 <- pSubtree l
---               (string ",")
---               t2 <- pSubtree l
---               (string ")")
---               let t1' = case t1 of
---                           PWord w   -> PWord $ annotateConj c1 $ w { category = (c1 :\ c1) :/ c1 }
---                           otherwise -> error "Left child of a conjunction rule 'lp' should be a word."
---                   
---               return $ PFwdApp c2 (reduce $ App (nodeExpr t1') (nodeExpr t2)) t1' t2
 
 pConj''' :: Lexicon -> Parser PTree
 pConj''' l = do r <- (try (string "lp") <|> (string "ltc"))
@@ -222,7 +159,7 @@ pLex l = do (string "lex('")
             (string "',")
             t <- pSubtree l
             (string ")")
-            return $ PNounRaise c2 (nodeExpr t) t
+            return $ PLexRaise c2 (nodeExpr t) t
 
 pWord :: Lexicon -> Parser PTree
 pWord l = do (string "lf(")

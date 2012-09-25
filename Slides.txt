@@ -6,3 +6,8 @@ Pronoun madness!
 "I would say the best part about this hotel was that it was very very quiet from inside the rooms ."
 
 
+---
+
+Implementation:
+
+Haskell is non-strict = infinite lists =)

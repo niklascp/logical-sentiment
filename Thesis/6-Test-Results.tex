@@ -3,20 +3,31 @@
 \chapter{Evaluation}
 \label{chap:evaluation}
 
+This chapter evaluates the presented logical approach for sentiment analysis, specifically the \emph{proof of concept} implementation presented in the previous section. In order to truly classify the capabilities of the system, real test-data are needed. In this chapter a test data set is introduced, and results from evaluation of the system on this set are presented. The results are explained, and it is considered weather the robustness and the correctness of the solution is significantly high enough for real applications.
 
-The data set used for evaluating the presented logical approach for sentiment analysis, specifically the \emph{proof of concept} system is the \emph{Opinosis Dataset}, originally used by \cite{Opinosis}. The data set consists of texts from actual user reviews on a total of 51 different topics. The topics are ranging over different objects, from consumer electronics (e.g.\ GPS navigation, music players, etc.) to hotels, restaurants and cars. For most of the objects, reviews are covered by multiple topics. For instance a specific car is covered by the topics \emph{comfort}, \emph{interior}, \emph{mileage}, \emph{performance}, and \emph{seats}.
+\section{Test data set}
+There are several \emph{free to use} labeled review data set available (most of them consisting of movie reviews for some reason). However recall that most research have focused on classifying sentiment on document, sentence or simply on word level, but not on entity level cf.\ Section~\vref{sec:logicalApproach}. This mean that it unfortunately has not been possible to find any free data set there are labeled on entity level. %, and the fact that they are labeled on other levels does not really .
 
-It has been hard to find any real alternatives for the \emph{Opinosis Dataset} for several reasons: Most collected reviews are commercial, and thus not free to use; furthermore the \emph{Opinosis Dataset} also contains summerized texts for each of its topics, which are constructed by manual, human interpretation. The latter allow a straight approach for comparison of any results the proposed system will yield.\\
-\begin{align}
-  &\textit{The hotel buffet had fabulous food.}
-  \label{txt:Ex1} \\[3mm]  
-  &\textit{Very friendly servers and nice selection of food at a reasonable price.}
-  \label{txt:Ex2} \\[3mm]  
-  &\textit{Room service was extortionate though, very very expensive,} \nonumber \\
-  &\textit{so we didnt bother, as food outlets a few minutes walk away.}
-  \label{txt:Ex3}
-\end{align}
+The test data set chosen for evaluation of the system is the \emph{Opinosis Dataset} \cite{Opinosis}. The data set consists of  approximately $\num{7000}$ texts from actual user reviews on number of different topics. The topics are ranging over different product and services, from consumer electronics (e.g.\ GPS navigation, music players, etc.) to hotels and restaurants. They are harvested from several online resellers and service providers, including i.a.\ \emph{Amazon}\footnote{Amazon, \url{http://www.amazon.com/}} and \emph{TripAdvisor}\footnote{TripAdvisor, \url{http://www.tripadvisor.com/}}. The dataset are neither labeled on entity level (or any other level for that matter), since it originally was used for evaluating an \emph{automatic summarization} project by \citeauthor{Opinosis} However the source of the reviews was one of the main reasons to use \emph{Opinosis Dataset} for the evaluation, since it was one of the original goals of the project, that a solution could process real data from actual businesses.
+%For most of the product and services, reviews are covered by multiple topics. For instance a specific hotel may be covered by the topics \emph{rooms}, \emph{location}, \emph{price} and \emph{service}. 
+%Especially the 
+%The data set is collected through a method that closely resembles the \emph{opinion seeking queries} presented back in Section~\vref{sec:naturalDataCollection}. 
+%It has been hard to find any real alternatives for the \emph{Opinosis Dataset} for several reasons: Most collected reviews are commercial, and thus not free to use; furthermore the \emph{Opinosis Dataset} also contains summerized texts for each of its topics, which are constructed by manual, human interpretation. The latter allow a straight approach for comparison of any results the proposed system will yield.\\
 
-The texts (\ref{txt:Ex1}) to (\ref{txt:Ex3}) show actual extracts from the data set for a topic on food quality on the Swissôtel Restaurant. While (\ref{txt:Ex1}) is a valid declarative sentence, (\ref{txt:Ex2}) is not, since it lacks a subject (i.e.\ the restaurant). A coarse review of the text in the dataset reveals that missing subjects are a repeating issue. This might not seem that odd, since many people would implicitly imply the subject from the topic that they are reviewing. Thus text missing subjects can in many cases still be considered as valid sentences with minimal effort. The text (\ref{txt:Ex3}) is on the other hand missing a transitive verb (presumably \emph{are}) from the subordinate clause. In cases where such savere gramatically errors occurs it is sugested to ignore the clause, and try only to analyse the main clause. Furthermore the text (\ref{txt:Ex3}) use repeated adverbs (e.g.\ \emph{very very}) to express intensification, however it should not be any major concern that a verb or adjective are modified multiple times by the \emph{same} adverb, but the intended intensification will probably not be included in the semantic analysis. Thus formalizing such a grammer is mostly a tak od designing such lexicon.
+After a coarse review of the data set it is safe to argue that the data set chosen for evaluation indeed includes all of the problematics discussed in Section~\vref{sec:realData}. Since the data set is unlabeled is was chosen to label a small subset of it in order to measure the robustness and the correctness of the presented solution. To avoid biases toward how the proof of concept system analyzes text the labeling was performed independently by two individuals which had no knowledge of how the presented solution processes texts. As the example texts throughout this thesis might have hinted, the subset chosen was from the set of hotel and restaurant reviews. It was of cause a subset that had not previously been used to test the implementation during development, however fixing the evaluation on the domain of hotel and restaurant reviews allowed the choice of relevant seed concepts cf.\ Section~\ref{sec:sentimentAdj}. The \emph{subject of interest} chosen for the analysis were \emph{rooms}, and the subset was thus randomly sampled from text containing this entity (in any morphological form), since there otherwise are no chance the proof of concept system can yield a result for the text.
 
-As evendent from these examples far from all texts in the dataset are valid sentences.
+The individuals were given a subset of 35 review texts, and should mark each text as either positive, negative or unknown \emph{with respect to the given subject of interest}. Out of the 35 review text the two subject's positive/negative labeling agreed on 34 of them, while unknowns and disagreements were discarded. Thus the inter-human \emph{concordance} for the test data set is $97.1\%$, which is very high, and would arguable drop significantly if more than two individuals were used for label annotation. The full subset samples, as well as each subjects marking is available in Table~\ref{table:labeling} in Appendix~\ref{chap:testData}.
+
+\section{Test results}
+The test data set was processed by the proof of concept system, and the raw results are also available Table~\ref{table:labeling}. The system was able to yield an sentiment value for the ``room'' entity for only $32.4\%$ of the test text. Table~\ref{table:results} shows the precision and recall results. As seen the recall is very low, which is addressed in a moment, while it is argued that precision is acceptable. 
+
+\begin{table}[ht]
+\center
+\begin{tabular}{l|r}
+	          & Result \\ \hline
+	Precision & $81.8\%$ \\
+	Recall    & $26.5\%$ 
+\end{tabular}
+\caption{Precision and recall results for proof of concept system.}
+\label{table:results}
+\end{table}

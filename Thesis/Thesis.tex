@@ -36,10 +36,19 @@
 \usepackage{pgfplots}
 
 % Code
-\usepackage{listings}
-  \lstset{language=Haskell,basicstyle=\scriptsize, breaklines=true,
-    keywordstyle=\bf\color{blue},tabsize=4,commentstyle=\color{gray}}
-  \lstdefinelanguage{text}{}
+\usepackage{listingsutf8}
+\usepackage{clrscode3e}
+
+\lstdefinelanguage{GHC}{
+  morekeywords={module,import,qualified,as,hiding,let,return,data,type,case,of,infix,deriving,class,where,do,instance},
+  sensitive=true,
+  morecomment=[l]{--},
+  morestring=[b]",
+}
+
+\lstset{language=GHC,basicstyle=\ttfamily\scriptsize, breaklines=true,
+  keywordstyle=\bf\color{blue},tabsize=2,columns=fixed,commentstyle=\color{gray}}
+\lstdefinelanguage{text}{}
 
 \newenvironment{numquote}
 {%	
@@ -126,7 +135,7 @@
 % THESIS PROPERTIES (Modifiy these fields with your details)
 %==================================================================================================
 \def\thesisauthor{Niklas Christoffer Petersen}      			%Author	
-\def\thesistitle{A Logical Approach to\\[8pt] Sentiment Analysis\\[8pt]DRAFT}      %Title
+\def\thesistitle{A Logical Approach to\\[8pt] Sentiment Analysis\\[8pt]DRAFT C}      %Title
 \def\thesishandin{September 30}					          		%Submission date (Day-Month}
 \def\thesisyear{2012} 							          		%Submission year 
 \def\thesisnumber{????}  						          		%DTU-IMM Serial number (do not include year)
@@ -186,6 +195,8 @@
 \include{7-Conclusion}
 \appendix
 \include{A1-Brown}							              %Appendix A
+%\include{A2-Source}                           %Appendix B
+\include{A3-Test}                           %Appendix B
 %-----------
 % Backmatter
 %-----------

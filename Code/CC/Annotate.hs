@@ -13,8 +13,6 @@ import Data.Graph.Inductive
 import CCG
 import WordNet hiding (Word)
 
-import Debug.Trace
-
 data AnnotationEnv = AnnotationEnv { 
      wnEnv  :: WordNetEnv,
      adjFun :: [SearchResult] -> Float,  -- rename to adjChange?
@@ -25,39 +23,41 @@ data AnnotationEnv = AnnotationEnv {
 omega = 100
 n = 2
 
--- Unfolding of graphs
+-- | Unfold the graph using the given relation and seeds.
 unfoldG :: (Ord a) => (a -> [a]) -> [a] -> (Map a Node, Gr a Int)
-unfoldG r seeds = runST ( unfoldST r seeds )
+unfoldG r seeds = runST $ unfoldST r seeds
 
+-- | State trasformer for unfolding graphs.
 unfoldST :: (Ord a) => (a -> [a]) -> [a] -> ST s (Map a Node, Gr a Int)
 unfoldST r seeds =
-    do mapRef    <- newSTRef Map.empty    -- Map from Item to Node
-       nodesRef  <- newSTRef []           -- List of Node/[Edge] pairs
-       idRef     <- newSTRef 0            -- Counter for indexing nodes
-       -- Recursively visits n
-       let visit n = 
-             do -- Test if n has already been visited
-                test <- (return . Map.lookup n =<< readSTRef mapRef)
-                case test of
-                  Just v  -> return v
-                  Nothing -> do -- Get next id for this item
-                                i <- readSTRef idRef
-                                modifySTRef idRef (+1)
-                                -- Update item/node map
-                                modifySTRef mapRef (Map.insert n i)
-                                -- Recursively visit related items
-                                ks <- mapM visit $ r n 
-                                let ns = ((i,n), [(i,k,1) | k <- ks])
-                                modifySTRef nodesRef (ns:)
-                                return i
-       -- Visit seeds
-       mapM visit seeds
-       -- Read resuls and return map/graph-pair
-       list <- readSTRef nodesRef         
-       nodeMap <- readSTRef mapRef
-       let nodes = [n | (n, _) <- list]
-       let edges = concat [es | (_, es) <- list]
-       return (nodeMap, mkGraph nodes edges)
+  do mapRef    <- newSTRef Map.empty    -- Map from Item to Node
+     nodesRef  <- newSTRef []           -- List of Node/[Edge] pairs
+     idRef     <- newSTRef 0            -- Counter for indexing nodes
+     -- Recursively visits n
+     let visit n = 
+           do -- Test if n has already been visited
+              test <- (return . Map.lookup n =<< readSTRef mapRef)
+              case test of
+                Just v  -> return v
+                Nothing -> 
+                  do -- Get next id for this item
+                     i <- readSTRef idRef
+                     modifySTRef idRef (+1)
+                     -- Update item/node map
+                     modifySTRef mapRef (Map.insert n i)
+                     -- Recursively visit related items
+                     ks <- mapM visit $ r n 
+                     let ns = ((i,n), [(i,k,1) | k <- ks])
+                     modifySTRef nodesRef (ns:)
+                     return i
+     -- Visit seeds
+     mapM visit seeds
+     -- Read resuls and return map/graph-pair
+     list <- readSTRef nodesRef         
+     nodeMap <- readSTRef mapRef
+     let nodes = [n | (n, _) <- list]
+     let edges = concat [es | (_, es) <- list]
+     return (nodeMap, mkGraph nodes edges)
 
 -- | Polarity value for adjective graphs
 pAdj :: Real b => Gr a b -> [Node] -> [Node] -> [Node] -> Float
@@ -168,7 +168,46 @@ annotateAny _ w@(Word { token = t, category = c, lemma = l }) =
       in 
         Abs v (constructTerm vs (term) r) 
 
+-- | Special annotation for C&C conj-rule
+annotateConj :: Category -> Word -> Word
+annotateConj cat w@(Word { lemma = l }) =
+  w { expr = Abs "x" $ Abs "y" $ constructTerm [] cat }
+  where 
+    newVar used = head $ dropWhile (`elem` used) $ (iterate (++ "'") "z")
+    constructTerm :: [String] -> Category -> SExpr
+    constructTerm used c = case c of
+      a :\ _ -> let v = newVar used in Abs v (constructTerm (v:used) a)
+      a :/ _ -> let v = newVar used in Abs v (constructTerm (v:used) a)
+      _      -> Seq $ map (\term -> foldr (flip App) term $ map Var used) [Var "x", Var "y"]
+
+-- | Auxiliary function for annotation for C&C lp/rp-rule
+flatten :: Category -> [Category]
+flatten (a :\ b) = b:flatten a
+flatten (a :/ b) = b:flatten a
+flatten a        = [a]
+
+-- | Special annotation for C&C lp/rp-rule
+annotateConj' :: Word -> Word
+annotateConj' w@(Word { lemma = l, category = c }) =
+  let f = flatten c
+      c1 = f !! 0
+      c2 = f !! 1
+      cr = f !! 2
+  in
+    case length f of
+      1 -> error "Annotate Conj: We expect least t -> t."
+      2 -> w { expr = lid }  -- Dummy conjection, just return identity, for instance , and . in "funny , and happy ."
+      _ -> w { expr = Abs "x" $ Abs "y" $ constructTerm [] c2 }     
+  where 
+    newVar used = head $ dropWhile (`elem` used) $ zVars
+    constructTerm :: [String] -> Category -> SExpr
+    constructTerm used c = case c of
+      a :\ _ -> let v = newVar used in Abs v (constructTerm (v:used) a)
+      a :/ _ -> let v = newVar used in Abs v (constructTerm (v:used) a)
+      _      -> Seq $ map (\term -> foldr (flip App) term $ reverse $ map Var used) [Var "x", Var "y"]
+
 -- | Special annotation for C&C ltc-rule
+annotateLtc :: Lexicon -> Word -> Word
 annotateLtc _ w@(Word { token = t, category = c, lemma = l }) =
   w { expr = constructTerm xyzVars [] c }
   where 

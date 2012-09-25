@@ -19,13 +19,17 @@ import qualified WordNet.Prims as P
 
 import Debug.Trace
 
+
+matchE :: String -> String -> Bool
+matchE s s' = (map toLower s') == s      ||
+              (map toLower s') == "it"   ||
+              (map toLower s') == "they"    
+
 extract :: String -> SExpr -> [Float]
-extract s (Fun s' j _ es) | (map toLower s') == s      ||
-                            (map toLower s') == "it"   ||
-                            (map toLower s') == "they"    = j:(concat $ map (extract s) es)
-                          | otherwise             = (concat $ map (extract s) es)
-extract s (Seq es)                                = (concat $ map (extract s) es)
-extract _ _                                       = []
+extract s (Fun s' j _ es) | matchE s s' = j:(concat $ map (extract s) es)
+                          | otherwise   = (concat $ map (extract s) es)
+extract s (Seq es)                      = (concat $ map (extract s) es)
+extract _ _                             = []
 
 analyse :: (Word -> Word) -> CcEnv -> String -> (String, Int) -> IO (Maybe Float)
 analyse annotationAlgorithm ccEnv subject (sentence, index) = do
@@ -96,7 +100,8 @@ main = do wne <- initializeWordNetWithOptions Nothing Nothing
           }
 
           -- Load review data
-          reviewData <- liftM lines $ readFile "../Data/rooms_swissotel_chicago_a.txt"           
+          --reviewData <- liftM lines $ readFile "../Data/rooms_swissotel_chicago_a.txt"           
+          let reviewData = ["Expensive parking but great rooms ."]
           result <- mapM (analyse (annotateWord env) ccEnv "room") $ zip reviewData [1..]
           -- Just tree <- runCcEnv ccEnv (annotateWord env) "The rooms were sleek and cool , great views ."
           -- latexify tree
