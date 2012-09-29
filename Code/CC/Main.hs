@@ -31,23 +31,24 @@ extract s (Fun s' j _ es) | matchE s s' = j:(concat $ map (extract s) es)
 extract s (Seq es)                      = (concat $ map (extract s) es)
 extract _ _                             = []
 
-analyse :: (Word -> Word) -> CcEnv -> String -> (String, Int) -> IO (Maybe Float)
+analyse :: (Word -> Word) -> CcEnv -> String -> (String, Int) -> IO ((Int, Maybe Float))
 analyse annotationAlgorithm ccEnv subject (sentence, index) = do
   tree <- runCcEnv ccEnv annotationAlgorithm sentence
   if (isJust tree) then do
+    latexify (fromJust tree) index
     let sexpr = nodeExpr $ fromJust tree
     putStr $ show sexpr
     let r = extract subject sexpr
     let m = (maximum r) + (abs (minimum r))
-    if (null r) then return Nothing
+    if (null r) then return (index, Nothing)
     else if (m > 0) then
-      return $ Just (maximum r)
+      return $ (index, Just (maximum r))
     else if (m < 0) then
-      return $ Just (minimum r)
+      return $ (index, Just (minimum r))
     else
-      return Nothing
+      return (index, Nothing)
   else
-    return Nothing
+    return (index, Nothing)
 
 
 
@@ -111,14 +112,14 @@ main = do wne <- initializeWordNetWithOptions Nothing Nothing
 
           -- Load review data
           reviewData <- liftM lines $ readFile "../Data/rooms_swissotel_chicago_a.txt"           
-          --let reviewData = ["Expensive parking but great rooms ."]
+          
+          -- Analyse
           result <- mapM (analyse (annotateWord env) ccEnv "room") $ zip reviewData [1..]
-          -- Just tree <- runCcEnv ccEnv (annotateWord env) "The rooms were sleek and cool , great views ."
-          -- latexify tree
+
+          -- Print results
           putStr "\n\n"
           putStr "Results:\n"
-          putStr $ unlines (map show result)
+          putStr $ unlines (map (\(i, r) -> (show i) ++ ": " ++ (show r)) result)
           putStr "\n\n"
           putStr "Finshed.\n"
           return ()
-

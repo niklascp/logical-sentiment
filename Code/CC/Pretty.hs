@@ -78,15 +78,15 @@ instance Pretty SExpr where
   render (Change t1 v) = (render t1) ++ "_{\\circ " ++ (show v) ++ "}"
   render (Scale t1 v) = (render t1) ++ "_{\\bullet " ++ (show v) ++ "}"
 
-latexify :: Pretty a => a -> IO ()
-latexify a = do writeFile "Pretty/Content.tex" $ "\\newcommand{\\content}{$$\n" ++ (render a) ++ "\n$$}\n"
-                setCurrentDirectory "Pretty"
-                rawSystem "/usr/texbin/pdflatex" ["-interaction=batchmode", "Maker.tex"]
-                rawSystem "open" ["Maker.pdf"]
-                return ()
+latexify :: Pretty a => a -> Int -> IO ()
+latexify a i = do writeFile ("Pretty/Content" ++ (show i) ++ ".tex") $ "\\newcommand{\\content}{$$\n" ++ (render a) ++ "\n$$}\n"
+                  --setCurrentDirectory "Pretty"
+                  --rawSystem "/usr/texbin/pdflatex" ["-jobname=" ++ (show i),"-interaction=batchmode", "Maker.tex"]
+                  --rawSystem "open" ["Maker.pdf"]
+                  return ()
 
 includePOS :: Bool
-includePOS = True
+includePOS = False
 
 includeLambda :: Bool
 includeLambda = True

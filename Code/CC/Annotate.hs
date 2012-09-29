@@ -129,7 +129,7 @@ annotateAdverb env w@(Word { category = c, lemma = l })
         query = (let ?wne = (wnEnv env) in (concat2 $ map (relatedBy Pertainym) (search l Adv AllSenses)) ++ (search l Adj AllSenses))
         scaleValue  = (scaleFun env) $ filter ((==) Adj . srPOS) $ query
         changeValue = (adjFun env) $ filter ((==) Adj . srPOS) $ query
-    in  if scaleValue /= 0 then
+    in  if scaleValue /= 1 then
           w { expr = (Abs "x" $ Scale (Var "x") $ scaleValue) } 
         else
           w { expr = (Abs "x" $ Change (Var "x") $ changeValue) } 

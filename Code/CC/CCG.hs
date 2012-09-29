@@ -31,7 +31,7 @@ data Category = S           { agreement :: Agreement } -- Sentence
               | N           { agreement :: Agreement } -- Noun
               | NP          { agreement :: Agreement } -- Noun Phrase
               | PP          { agreement :: Agreement } -- Preposision Phrase
-              | CONJ        { agreement :: Agreement } -- Conjugation (temperary category)
+              | CONJ        { agreement :: Agreement } -- Conjugation (temperary category)
               | Punctuation { agreement :: Agreement } -- Punctation  (temperary category)
               | Comma       { agreement :: Agreement } -- Comma  (temperary category)
               | Category :/ Category                   -- Forward slash

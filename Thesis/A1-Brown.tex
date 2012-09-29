@@ -2,61 +2,36 @@
 \chapter{A naive attempt for lexicon acquisition}
 \label{chap:brownCorpus}
 
-This appendix describes the efforts that was initially made in order to acquire a CCG lexicon by \emph{transforming} a tagged corpus, namely the \emph{Brown Corpus}.
+This appendix describes the efforts that was initially made in order to acquire a CCG lexicon by \emph{transforming} a tagged corpus, namely the \emph{Brown Corpus}. The approach turned out to be very naive, and was dropped in favor for the C\&C models trained on the CCGBank \cite{ccgBank}, in turn The Penn Treebank \cite{pennTreebank}.
 
-Since English is 
-\begin{quote}
-  \it As with English around the world, the English language as used in the United Kingdom and the Republic of Ireland is governed by convention rather than formal code: there is no equivalent body to the Académie française or the Real Academia Española, and the authoritative dictionaries (for example, Oxford English Dictionary, Longman Dictionary of Contemporary English, Chambers Dictionary, Collins Dictionary) record usage rather than prescribe it. In addition, vocabulary and usage change with time; words are freely borrowed from other languages and other strains of English, and neologisms are frequent.
-  \flushright{\footnotesize\url{http://en.wikipedia.org/wiki/British_English#Standardisation}}
-\end{quote}
+\section*{The Brown Corpus}
+English is governed by convention rather than formal code, i.e.\ there is no regulating body like the Académie française. Instead, authoritative dictionaries, i.a.\  Oxford English Dictionary, describe usage rather than defining it. Thus in order to acquire a covering lexicon it is necessary to build it from large amount English text.
 
 The Brown Corpus was compiled by \citeauthor{brown} \shortcite{brown} by collecting written works printed in United States during the year 1961. The corpus consists of just over one million words taken from 500 American English sample texts, with the intension of covering a highly representative variety of writing styles and sentence structures.
 
-Notable drawbacks of the Brown Corpus include its age, i.e.\ there are evidently review topics where essential and recurring words used in present day writing was not coined yet or rarely used back 50 years ago. For instance does the Brown Corpus not recognize the words \emph{internet}, \emph{hotspot}
+Notable drawbacks of the Brown Corpus include its age, i.e.\ there are evidently review topics where essential and recurring words used in present day writing was not coined yet or rarely used back 50 years ago. For instance does the Brown Corpus not recognize the words \emph{internet}. However it is one of the only larger \emph{free to use} tagged corpus available, and for this reason is was chosen for the attempt. Even early analysis showed that coverage would be disappointing, since the Brown Copus only contains 80.4\% of the words of the \emph{hotels and restaurants} subset of the \emph{Opinosis data set} \cite{Opinosis} ($\num{3793}$ words). This mean that every 5th word would on average be a guess in the blind. However the approach was continued to see how many sentences would be possible to syntactic analyze with the lexicon.
 
-   sentences will containing words has found it's way into comon  that 
+The corpus is annotated with \emph{part of speech} tags, but does not include the deep structure of a \emph{treebank}. There is a total of 82 different tags, some examples are shown in Table~\ref{tab:brownTags}. As shown from the extract the tags include very limited information, and while some features can be extracted (e.g.\ tense, person) in some cases, the tagging gives no indication of the context.
+\begin{table}[ht]
+\begin{center}
+\begin{tabular}{ll}
+  Tag & Description \\ \hline \hline
+  VB  & verb, base form \\ \hline
+  VBD & verb, past tense \\ \hline
+  VBG & verb, present participle/gerund \\ \hline
+  VBN & verb, past participle \\ \hline
+  VBP & verb, non 3rd person, singular, present \\ \hline
+  VBZ & verb, 3rd. singular present 
+\end{tabular}
+\end{center}
+\caption{Extract from the Brown tagging set.}
+\label{tab:brownTags}
+\end{table}
 
-Other corpora has been considered
-\cite{cs}
+Without any contextual information the approach for translating this information into lexical categories is becomes very coarse. For instance there are no way of determining whether a verb is \emph{intransitive}, \emph{transitive}, or \emph{di-transitive}. The chosen method was simply to over-generate, i.e. for every verb entries for all three types of verbs was added to the lexicon. In total 62 of such rules were defined, which produced a lexicon containing CCG categories for 84.5\% of $\num{56057}$ unique tokens present in the Brown Corpus.
 
-\section{Tokenizer and tagger}
-The tokenizer has a very simple task, namely to convert an input string to a list of tokens (lower case words) that represent the symbols of the language. An example of the transformation is shown in
-(\ref{fig:Tokenizer}).
-\begin{align}
-  &\text{``Put the pyramid onto the table.''} \to 
-  \left[ 
-  \token{put}, \token{the}, \token{pyramid}, \token{onto}, \token{the}, \token{table} 
-  \right] 
-  \label{fig:Tokenizer}
-\end{align}
+\section*{Evaluating the lexicon}
+To evaluate the coverage of the acquired lexicon an \emph{shift-reduce} parser was implemented in Haskell. It is not the most effective parsing strategy, but was simple to implement and considered efficiently enough to test the lexicon. A representative sample of the \emph{hotels and restaurants} subset of the \emph{Opinosis data set} was selected (156 sentences). The result was that the parser only was able to parse $10.9\%$ of the sentences. The result was very disappointing, and it was not even considered weather these even was correctly parses. Insted it was recognized that building a CCG lexicon from only a tagged corpus is not a feasible approach. Further development of the approach was dropped and instead the component was replaced with the C\&C~tools~\cite{candc}.
 
-\subsection{Shift-reduce parser}
-\section{Find a good title}
-The initial attempt is simply to construct a parser that 
 
-\begin{quote}
-	There are three basic ways to build a shift-reduce parser. Full LR(1) (the `L' is the direction in which the input is scanned, the `R' is the way in which the parse is built, and the `1' is the number of tokens of lookahead) generates a parser with many states, and is therefore large and slow. SLR(1) (simple LR(1)) is a cut-down version of LR(1) which generates parsers with roughly one-tenth as many states, but lacks the power to parse many grammars (it finds conflicts in grammars which have none under LR(1)).
-\end{quote}
-
-\begin{quote}
-LALR(1) (look-ahead LR(1)), the method used by Happy and yacc, is tradeoff between the two. An LALR(1) parser has the same number of states as an SLR(1) parser, but it uses a more complex method to calculate the lookahead tokens that are valid at each point, and resolves many of the conflicts that SLR(1) finds. However, there may still be conflicts in an LALR(1) parser that wouldn't be there with full LR(1).
-\end{quote}
-
-The state $S_\tau$ ...
-
-Formally a rule $\mathcal{R}_\tau$, for the state type $\tau$, is a transformation from a state $s \in \mathcal{S}_\tau$ onto a new set of states $\mathcal{S}_\tau' \subset \mathcal{S}_\tau$ cf. \ref{eq:Rule}.
-\begin{equation}
-	\mathcal{R}_\tau : \mathcal{S}_\tau \to \mathcal{P}(\mathcal{S}_\tau)
-	\label{eq:Rule}
-\end{equation} 
-
-The state type for analysing CCGs is a 2-tuple, where $P$ is  a totally ordered set of ..., 
-
-$$\mathcal{S}_\mathrm{CCG} : \mathcal{P}(T) \times \mathcal{P}(\mathcal{P}(T))$$
-
-\begin{equation}
-	\mathcal{R}^\mathrm{shift}_\mathrm{CCG}
-\end{equation}
-
-If all rules in the set is monotone, then the parsing will terminate 
 

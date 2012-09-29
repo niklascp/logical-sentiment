@@ -188,5 +188,9 @@ for w in words:
 	output.write(" :- ")
 	output.write(', '.join(dictonary[w]))
 	output.write("\n")
-#pickle.dump(dict(dictonary), output)
+output.close()
+
+# write lexicon to file (for analysis)
+output = open('lex.pickle', 'w')
+pickle.dump(dict(dictonary), output)
 output.close()

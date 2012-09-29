@@ -1,30 +1,67 @@
 %!TEX root = Thesis.tex
 
 \chapter{Discussion}
-\label{chap:Conclusion}
+\label{chap:discussion}
 
-%Even though the stucture of the sentences is inspected deeply though the syntactic analysis the semantic expression assigned to adjectives and adverbs is still atomic, and based on the key concepts the the context specific positive and negative lists. Even though the lists are context specific, a concept can have ... løses dette evt. af subject-focus?
+The presented method for \emph{entity level} sentiment analysis using deep sentence structure analysis has shown acceptable correction results, but inadequate robustness cf.\ the previous chapter.
+
+The biggest issue for the demonstrated proof of concept system is the lack of correct syntactic tagging models. It is argued that models following a closer probability distribution of review texts than The Penn Treebank models would have improved the robustness of the system significantly. One might think, that if syntactic labeled target data are needed, then the presented logical method really suffers the same issue as machine learning approaches, i.e. \emph{domain dependence}. However it is argued that exactly because the models needed are of \emph{syntactic level}, and not of \emph{sentiment level}, they really does not need to be \emph{domain specific}, but only \emph{genre specific}. This reduces the number of models needed, as a syntactic tagging model for reviews might cover several domains, and thus the \emph{domain independence} of the presented method is intact.
+
+To back this argument up, consider Figure~\ref{fig:distBias2} which shows the probability of sentence lengths in two clearly different sentiment domains, namely \emph{hotels and restaurants} ($\num{2059}$ samples) and \emph{GPS navigation equipment} ($\num{583}$ samples). This measure gives strong indications, that a robust \emph{syntactic level model} for either domain would also be fairly robust for the other. The same is intuitively not true for \emph{sentiment level models}.
+\begin{figure}[ht]
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[
+	%ybar,
+	small,
+	enlargelimits=0.0,
+	enlarge y limits=upper,	
+	legend pos=north east,
+	legend style={draw=none,legend columns=-1,cells={anchor=west},
+	nodes={inner sep=1pt,below=-4pt},font=\footnotesize},
+	legend style={/tikz/every even column/.append style={column sep=8pt}},
+	width=.8\textwidth,
+	height=6cm,
+	xlabel={Sentence length in number of words},
+	yticklabel={$\pgfmathprintnumber{\tick}$\%},
+]
+\addplot[magenta!80!black] table [col sep=comma,trim cells=true,y=y1] {wsjdist2.dat};
+\addplot[cyan!80!black] table [col sep=comma,trim cells=true,y=y2] {wsjdist2.dat};
+\legend{Hotels and restaurants,Navigation}
+\end{axis}
+\end{tikzpicture}
+\end{center}
+\vspace{-1em}
+\caption{Sentence length distribution for different review topics.}
+\label{fig:distBias2}
+\end{figure}
+
+An interesting experiment would have been to see how the presented method performed on such genre specific syntactic models.   Building covering treebanks for each genre to train such models is an enormous task, and clearly has not been achievable in this project even for a single genre (The Penn Treebank took eight years to compile). However \citeauthor{as} \shortcite{as} presents methods for \emph{cross-domain semi-supervised learning}, i.e. the combination of labeled (e.g.\ CCGBank) and unlabeled (e.g.\ review texts) data from different domains (e.g. syntactic genre). This allows the construction of models that utilizes the knowledge present in the labeled data, but also biases it toward the distribution of the unlabeled data. The learning accuracy is of cause not as significant as compared to learning with large amounts of labeled target data, but it can improve cases as the one presented in this thesis greatly. The reason why this was not performed in this project is partly due to it was not prioritized, and the fact that the method still assumes access to raw labeled data (e.g.\ CCGBank) which was not available.
+
+The other issue identified when analyzing the low robustness was the failure of extracting sentiment values, even though they were actually present in the semantic expression yielded by the conclusion of the deduction proof. This clearly shows that the simple extraction algorithm given by Definition~\ref{def:extract} is too constitutive, i.e.\ it turned out to be insufficient to only extract sentiment values at the atomic functor level for the \emph{subject of interest}. However, since the knowledge is actually present, it is argued that more advanced extraction algorithms would be able to capture these cases. Extraction strategies could also include relating entities by the use of some of the abstract topological relations available in semantic networks, e.g. \emph{hyponym}/\emph{hypernym} and \emph{holonym}/\emph{meronym}. With such relations, a strong sentiment of the entity \emph{room} might inflict the sentiment value of \emph{hotel}, since \emph{room} is a meronym of \emph{building}, and \emph{hotel} is a hyponym of \emph{building}.
 
 
-Since adjectives and adverbs are always reduced to only contribute to the polarity, they cannot be used to identify subjects. E.g. what do you think about the white iPhone vs. the black? (need better ex.!)
+The reason why more advanced extraction algorithms were not considered was that it would require more test data to validate that such advanced extraction strategies are well-behaved. % and it would also possible require more meta-data on the functors (at least which \emph{part-of-speech} was the foundation of the functor). 
+Recall that it has not possible to find quality test data labeled on entity level, and it was considered  too time consuming to manually construct large amounts of entity labeled labeled data.
 
-\section{Fureture work}
-We expect such an algorithm to calculate a match score, that is a weighted average over several metrics. Given below are methods for calculating scores for some evident metrics.
+With these issue addressed, it is argued that the \emph{proof of concept} system indeed shows at least the potential of the presented method, and further investment in labeled data, both syntactic tagging data, and labeled test data, would make the solution more robust.
 
-\begin{itemize}
-  \item Symbolic similarity -- at its most basic form we can consider a sample string (i.e. a word from an input text) against the system's vocabulary using approximate string matching algorithms such as the  \emph{Levenshtein distance} as described by \cite{Wagner}.
+%Since adjectives and adverbs are always reduced to only contribute to the polarity, they cannot be used to identify subjects. E.g. what do you think about the white iPhone vs. the black? (need better ex.!)
 
-  \item Pronunciation similarity -- it is an valid assumption that many misspellings still share a majority of the pronunciation with the intended word, i.e. they are approximately homophone. Thus comparing the phonetic properties of an sample string with possible matches can in cases correct misspellings. The \emph{Soundex algorithm} by Robert C. Russell and Margaret K. Odell, as described by \cite[p. 391–92]{ACP3}, is a simple, yet power full approach for this purpose.
 
-\end{itemize}
-
----
-
-Histogram of test/train distribution - plot word length - semi-supervised self-training with re-ranking ?
-
----
-
-``lift'' restrictions about the texts, e.g. no of sentences ... context-sensitive, e.g. resolution of relative pronpoun ... The room was luxurious, it had ...
 
 \chapter{Conclusion}
-\label{chap:Conclusion}
+\label{chap:conclusion}
+
+This thesis has presented a \emph{formal logical method} for \emph{entity level} sentiment analysis, which utilizes \emph{machine learning techniques} for efficient syntactic tagging. The method should be seen as an alternative to pure machine learning methods, which have been argued inadequate for capturing long distance dependencies between an entity and opinions, and highly dependent on the domain of the sentiment analysis.
+
+The main aspects of method was presented in three stages:%, each roughly corresponding to one of the project specific learning objectives.
+\begin{itemize}
+\item The \emph{Combinatory Categorial Grammar} (CCG) formalism,  presented in Chapter~\ref{chap:ccg}, is a modern and formal logical technique for processing of natural language texts. The semantics of the system was extended in order to apply it to the field of entity level sentiment analysis.
+
+\item In order to allow the presented method to work on a large vocabulary and a wide range of sentence structures, Chapter~\ref{chap:lexiconAcquisition} described the usage of statistical models for syntactic tagging of the texts, after it had been argued that such an approach is the only reasonable. Algorithms for building semantic expressions from the syntactic information was presented, along with a formal method for reasoning about the sentiment expressed in natural language texts by the use of semantic networks.
+
+\item Chapter~\ref{chap:implementation} presented essential details about the \emph{proof of concept} system, which has been fully implemented, using functional programming, in order to demonstrate and test the presented method.
+\end{itemize}
+
+Finally the presented method was evaluated against a small set of manually annotated data. The evaluation showed, that while the correctness of the presented method seem acceptably high, its robustness is currently inadequate for most real world applications as presented in Chapter~\ref{chap:evaluation}. However it was argued in the previous chapter that it indeed is possible to improve the robustness significantly given further investment and development of the method.

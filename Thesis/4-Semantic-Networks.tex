@@ -6,19 +6,22 @@ The tiny languages captured by ``handwritten'' lexicons, such as the one demonst
 
 In order to use the presented model on a actual data, the acquisition of a wide covering lexicon is crucial. Initially considerable effort was made to \emph{try} to build a CCG lexicon from a \emph{POS-tagged corpus} (part-of-speech-tagged corpus). A POS-tagged corpus is simply a corpus where each token is tagged with a POS-tag, e.g.\ noun, verb, etc. There is no deep structure in such a corpus as opposed to a \emph{treebank}. This approach turned up to have extensive issues as a result of this lack of structure, some of which are detailed in Appendix~\ref{chap:brownCorpus} which succinctly describes the process of the attempt.
 
-There exists some wide covering CCG lexicons, most notable \emph{CCGbank}, compiled by \citeauthor{ccgBank} \shortcite{ccgBank} by techniques presented by \cite{juliaThesis}. It is essentially a translation of almost the entire Penn Treebank \cite{pennTreebank}, which contains over 4.5 million tokens, and where each sentence structure has been analyzed in full and annotated. The result is a highly covering lexicon, with some entries having assigned over 100 different lexical categories. Clearly such lexicons only constitutes half of the previous defined $\mathcal{L}_\textsc{ccg}$ map, i.e.\ only the lexical categories, $\Gamma$. The problem of obtaining a full lexicon, that also yields semantics expressions, is addressed in the next section. It is also worth mentioning that since \citeauthor{baldridgeThesis}'s \shortcite{baldridgeThesis} work on modalities only slightly predates \citeauthor{juliaThesis}'s \shortcite{juliaThesis} work on CCGBank, the CCGBank does not incorporate modalities\footnote{There does exists another project, OpenCCG, started by \citeauthor{baldridgeThesis}, which actually does incorporate modalities, but it has little documentation and was therefore not valued mature enough.}. However more unfortunately is that CCGBank is not free to use, mainly due to license restrictions on the Penn Treebank.% It has not been possible to fund a license.
+There exists some wide covering CCG lexicons, most notable \emph{CCGbank}, compiled by \citeauthor{ccgBank} \shortcite{ccgBank} by techniques presented by \cite{juliaThesis}. It is essentially a translation of almost the entire Penn Treebank \cite{pennTreebank}, which contains over 4.5 million tokens, and where each sentence structure has been analyzed in full and annotated. The result is a highly covering lexicon, with some entries having assigned over 100 different lexical categories. Clearly such lexicons only constitutes half of the previous defined $\mathcal{L}_\textsc{ccg}$ map, i.e.\ only the lexical categories, $\Gamma$. The problem of obtaining a full lexicon, that also yields semantics expressions, is addressed in the next section. It is also worth mentioning that since \citeauthor{baldridgeThesis}'s \shortcite{baldridgeThesis} work on modalities only slightly predates \citeauthor{juliaThesis}'s \shortcite{juliaThesis} work on CCGBank, the CCGBank does not incorporate modalities\footnote{There does exists another project, OpenCCG, started by \citeauthor{baldridgeThesis}, which actually does incorporate modalities, but it has little documentation and was therefore not valued mature enough.}. However more unfortunately is that CCGBank is not \emph{free to use}, mainly due to license restrictions on the Penn Treebank.% It has not been possible to fund a license.
 
 What might not be as obvious is that besides obtaining a wide-covering lexicon, $\mathcal{L}_\textsc{ccg}$, a even harder problem is for some text $T$ to select the \emph{right} tagging from $\mathcal{L}_\textsc{ccg}(w)$ for each token $w \in T$. \citeauthor{ccgBank} \shortcite{ccgBank} calculate that the expected number of lexical categories per token is 19.2 for the CCGBank. This mean that a exhaustive search of even a short sentence (seven tokens) is expected to consider over 960 million ($19.2^7 \approx \num{961852772}$) possible taggings. This is clearly not a feasible approach, even if the parsing can explore all possible deductions in polynomial time of the number of possible taggings. %, e.g.\ \cite{shiftReduceChart}. 
 The number of lexical categories assigned to each token needs to be reduced, however simple reductions as just assigning the most frequent category  observed in some training set (for instance CCGBank) for each token is not a solution. This would fail to accept a large amount of valid sentences, simply because it is missing the correct categories. 
 
 \section{Maximum entropy tagging}
-Clearly a solution need to base the reduction on the setting of the token, i.e.\ in which \emph{context} the token appears. \citeauthor{suppertagging} \shortcite{suppertagging} presents a machine learning approach based on a \emph{maximum entropy model} that estimate the probability that a token is to be assigned a particular category, given the \emph{features} of the local context, e.g.\ the POS-tag of the current and adjacent tokens, etc. This is used to select a subset of possible categories for a token, by selecting categories with a probability within a factor of the category with highest probability. \citeauthor{suppertagging} shows that the average number of lexical categories per token can be reduced to 3.8 while the parser still recognize 98.4\% of unseen data. \citeauthor{candc} \shortcite{candc} presents a complete parser, which utilizes this tagging model, and a series of (log-linear) models to speed-up the actual deduction (i.e.\ the parsing) once the tagging model has assigned a set of categories to each token. What maybe even more interesting is that models trained on the full CCGBank, along with toolchain to use them (called the C\&C tools), can be licensed freely for education or research purposes. For this reason it was chosen to use these models and tools.
+\label{sec:maxEntropy}
+Clearly a solution need to base the reduction on the setting of the token, i.e.\ in which \emph{context} the token appears. \citeauthor{suppertagging} \shortcite{suppertagging} presents a machine learning approach based on a \emph{maximum entropy model} that estimate the probability that a token is to be assigned a particular category, given the \emph{features} of the local context, e.g.\ the POS-tag of the current and adjacent tokens, etc. This is used to select a subset of possible categories for a token, by selecting categories with a probability within a factor of the category with highest probability. \citeauthor{suppertagging} shows that the average number of lexical categories per token can be reduced to 3.8 while the parser still recognize 98.4\% of unseen data. \citeauthor{candc} \shortcite{candc} presents a complete parser, which utilizes this tagging model, and a series of (log-linear) models to speed-up the actual deduction once the tagging model has assigned a set of categories to each token. What maybe even more interesting is that models trained on the full CCGBank, along with toolchain to use them (called the C\&C tools), can be licensed freely for education or research purposes. For this reason it was chosen to use these models and tools.
 
-Furthermore, even though the models neither incorporates modalities, since they are trained on the CCGBank, the deduction models solve many of these problems, since a more plausible deduction (i.e.\ a deduction seen more frequent in the CCGBank) always will suppress other less plausible deductions. Special care are taken about coordination, so neither here seems the lack of modalities to yield significant issues.
+Furthermore, even though the models neither incorporates modalities, since they are trained on the CCGBank, the deduction models solve many of these problems, since a more plausible deduction (i.e.\ a deduction seen more frequent in the CCGBank) always will suppress other less plausible deductions. Special care are taken about coordination, so neither here seems the lack of modalities to yield significant issues. Furthermore since the tagging models are based on trained data, which also can contain minor grammatical errors and misspellings, it is still able to assign categories to lexical entries even though they might be incorrect spelled or of wrong form.
+\vspace{-1em}
 
 \section{Annotating the lexicon}
 \label{sec:annotatingLexicon}
 The output from the C\&C toolchain can be printed in various formats, including Prolog, which was considered the closest to the presented model, as it, given some set of tokens, $w_1, \ldots, w_n$, simply returns a lexicon and a deduction. An illustrative output for the tokens ``the service was great'' is given in Figure~\ref{fig:candcOutput}. In Chapter~\ref{chap:implementation} more details on the actual format and the processing of it is given.
+\vspace{-1.5em}
 \begin{figure}[ht]
 	\begin{minipage}[b]{0.6\linewidth}
 	\center
@@ -58,7 +61,7 @@ The output from the C\&C toolchain can be printed in various formats, including 
 \end{figure}
 \vspace{-1em}
 
-Clearly, deductions in the style previously presented is trivially obtained by substituting the axioms placeholders with the lexicon entries associated. The C\&C toolchain also has a build-in morphological analyzer which allow the lexicon to provide the \emph{lemma} of the tokens and the POS-tag\footnote{Since the C\&C models are trained on CCGBank, which in turn are a translation of The Penn Treebank (PTB), the POS-tag-set used is equivalent to that of PTB cf.\ \cite{pennTreebank}.} of the token. Both of these will be proven convenient later.
+Clearly, deductions in the style previously presented is trivially obtained by substituting the axioms placeholders with the lexicon entries associated. The C\&C toolchain also has a build-in morphological analyzer which allow the lexicon to provide the \emph{lemma} of the tokens, as well as its POS-tag\footnote{Since the C\&C models are trained on CCGBank, which in turn are a translation of The Penn Treebank (PTB), the POS-tag-set used is equivalent to that of PTB cf.\ \cite{pennTreebank}.}. Both of these will be proven convenient later.
 
 There is however one essential component missing from the lexicon, namely the semantic expressions. However due to the \emph{Principle of Categorial Type Transparency} it is known exactly \emph{what} the types of the semantic expressions should be. There are currently a total of 429 different tags in the C\&C tagging model, thus trying to handle each of these cases individually is almost as senseless choice as trying to manually construct the lexicon, and certainly not very robust for changes in the lexical categories. The solution is to handle some cases that need special treatment, and then use a generic annotation algorithm for all other cases. Both the generic and the special case algorithms will be a transformation $(\mathcal{T}, \Sigma^\star) \to \Lambda$, where the first argument is the type, $\tau \in \mathcal{T}$, to construct, and the second argument is the lemma, $\ell \in \Sigma^\star$, of the lexicon entry to annotate. Since the special case algorithms will fallback to the generic approach, in case preconditions for the case are not met, it is convenient to start with the generic algorithm, $\mathcal{U}_\textsc{gen}$, which is given by Definition~\ref{def:Ugen}.
 
@@ -68,8 +71,9 @@ There is however one essential component missing from the lexicon, namely the se
 	\mathcal{U}_\textsc{gen}(\tau, \ell) = \mathcal{U}'_\textsc{gen}(\tau, \ell, \mathcal{V}, \emptyset)
 	\label{eq:Ugen}
 \end{align}
+\vspace{-1.5em}
 
-If $\tau$ is primitive, i.e.\ $\tau \in \mathcal{T}_\mathrm{prim}$, then the generic algorithm simply return a functor with name $\ell$, polarity and impact argument both set to $0$, and the ordered set $A$ as arguments. Otherwise there must exists unique values for $\tau_\alpha, \tau_\beta \in \mathcal{T}$, such that $\tau_\alpha \to \tau_\beta = \tau$, and in this case the algorithm return an abstraction of $\tau_\alpha$ on variable $v \in V$, and recursively generates a expression for $\tau_\beta$.
+If $\tau$ is primitive, i.e.\ $\tau \in \mathcal{T}_\mathrm{prim}$, then the generic algorithm simply return a functor with name $\ell$, polarity and impact argument both set to $0$, and the ordered set $A$ as arguments. Otherwise there must exist unique values for $\tau_\alpha, \tau_\beta \in \mathcal{T}$, such that $\tau_\alpha \to \tau_\beta = \tau$, and in this case the algorithm return an abstraction of $\tau_\alpha$ on variable $v \in V$, and recursively generates a expression for $\tau_\beta$.
 \begin{align*}
 	\mathcal{U}'_\textsc{gen}(\tau, \ell,V,A) =
 	\begin{cases}
@@ -96,9 +100,10 @@ The recursive call also removes the abstracted variable $v$ from the set of vari
 	\item Otherwise, simply append $v$ to $A$.
 \end{itemize} 
 \label{def:Ugen}
-\vspace{-1em}
-\done
 \end{definition}
+%\vspace*{-2em}
+\done
+\vspace*{-2em}
 \clearpage
 
 The get a little familiar with how the generic semantic annotation algorithm works, Example~\ref{ex:Ugen} shows the computation of some types and lemmas.
@@ -145,7 +150,7 @@ Clearly the generic algorithm does not provide much use with respect to extracti
 
 \begin{itemize}
 	\item \emph{Determiners} with simple category, i.e.\ $\cat{NP}/\cat{N}$, are simply mapped to the identity function, $\lambda x.x$.
-	While determiners have high focus in other NLP tasks, such as determine if a sentence is valid, the importance does not seem significant in sentiment analysis, e.g.\ whether an opinion is stated about \emph{some} or \emph{all} of entities does not change the overall polarity of the opinion bound to that entity.
+	While determiners have high focus in other NLP tasks, such as determine if a sentence is valid, the importance does not seem significant in sentiment analysis, e.g.\ whether an opinion is stated about \emph{a entity} or \emph{the entity} does not change the overall polarity of the opinion bound to that entity.
 
 	\item \emph{Nouns} are in general just handled by the generic algorithm, however in some cases of multi-word nouns, the sub-lexical entities may be tagged with the category $\cat{N}/\cat{N}$. In these cases the partial noun is annotated with a list structure, that eventually will capture the entire noun, i.e.\ $\lambda x.\langle \mathcal{U}_\textsc{gen}(\tau_\textsc{n}, \ell), x\rangle$, where $\ell$ is the lemma of the entity to annotate.
 
@@ -157,7 +162,7 @@ Clearly the generic algorithm does not provide much use with respect to extracti
 
 	\item \emph{Prepositions} and \emph{relative pronouns} need to change the impact argument of captured partial sentences, i.e.\ \emph{preposition phrases} and \emph{relative clauses}, such that further modification should bind to the subject of the entire phrase as were illustrated by Example~\ref{ex:semantics2}.
 
-	\item \emph{Conjunctions} are annotated by an algorithm closely similar to $\mathcal{U}_\textsc{gen}$, however instead of yielding a functor of argument, the algorithm yields a list structure. This allow any modification to bind on each of the conjugated sub-phrases.
+	\item \emph{Conjunctions} are annotated by an algorithm closely similar to $\mathcal{U}_\textsc{gen}$, however instead of yielding a functor of arguments, the algorithm yields a list structure. This allow any modification to bind on each of the conjugated sub-phrases.
 	
 \end{itemize}
 
@@ -180,7 +185,7 @@ a semantic network is a quadruple $(L,S,R,M)$ where:\\[-2em]
 \end{definition}
 \vspace{-2em}
 
-Notice that $S$ and $R$ constitutes a set of graphs, i.e.\ for each relation $r \in R$ the graph~$(S,r)$. The graph is undirected if $r$ is \emph{symmetric}, and directed if $r$ is \emph{asymmetric}. An illustrative example of such a graph, denoting a relation in a extract of a semantic network of adjective concepts is given in Figure~\ref{fig:semanticNetwork}.  Since a lexical unit might entail many different concepts cf.\ Definition~\ref{def:SemanticNetwork}, semantic concepts is described by the set of lexical unit that can entail it, each denoted with the index that uniquely identifies that meaning of the lexical unit. For instance in Figure~\ref{fig:semanticNetwork} the 4th meaning of \emph{olympian} entail the same semantic concept as the 1st meaning of \emph{exceptional}.
+Notice that $S$ and $R$ constitutes a set of graphs, i.e.\ for each relation $r \in R$ the graph~$(S,r)$. The graph is undirected if $r$ is \emph{symmetric}, and directed if $r$ is \emph{asymmetric}. An illustrative example of such a graph, denoting a relation in a extract of a semantic network of adjective concepts is given in Figure~\ref{fig:semanticNetwork}.  Since a lexical unit might entail many different concepts cf.\ Definition~\ref{def:SemanticNetwork}, semantic concepts are described by the set of lexical unit that can entail it, each denoted with the index that uniquely identifies that meaning of the lexical unit. For instance in Figure~\ref{fig:semanticNetwork} the 4th meaning of \emph{olympian} entail the same semantic concept as the 1st meaning of \emph{exceptional}.
 
 \begin{figure}[ht]
   \center
@@ -195,7 +200,7 @@ WordNet contains a variety of relations, $R$, however for the purpose of calcula
 \begin{itemize}
 	\item The \emph{similar}-relation, $r_\mathrm{similar}$, links \emph{closely similar} semantic concepts, i.e.\ concepts having almost the synonymies mensing in most contexts. The relation is present for most concepts entailed by adjectives.
 	\item The \emph{see also}-relation, $r_\mathrm{see\text{-}also}$, links \emph{coarsely similar} semantic concepts, i.e.\ concepts having a clear different mensing, but may be interpreted interchangeably for some contexts. Figure~\vref{fig:semanticNetwork} shows an example of exactly the \emph{see also}-relation.
-	\item The \emph{pertainym}-relation, $r_\mathrm{pertainym}$, links the adjectives from which a adverb was derived, e.g.\ \emph{extreme} is the pertainym of \emph{extremely}.
+	\item The \emph{pertainym}-relation, $r_\mathrm{pertainym}$, links the adjectives from which an adverb was derived, e.g.\ \emph{extreme} is the pertainym of \emph{extremely}.
 \end{itemize}
 \vspace{1em}
 
@@ -248,17 +253,15 @@ The calculation of $p_\mathrm{adj}(\ell)$ can be generalized for any semantic gr
 	\label{eq:p}
 \end{align}
 where:
-\begin{align}
+\begin{align*}
 	D_d(\ell, S') = \left[ d(s, s') \; | \; s \in M(\ell), s' \in S' \right] 
-	\label{eq:p}
-\end{align}
+\end{align*}
 
 %The sentiment polarity for an adjective with lemma $\ell$ is denoted $p(G, S_\mathrm{pos}, S_\mathrm{neg}, \ell)$, where $G$ is the semantic graph, and $S_\mathrm{pos}, S_\mathrm{neg}$ are  cf.\ (\ref{eq:p_dcl})
 
 \section{Sentiment polarity of adverbs}
 \label{sec:sentimentAdverb}
 The approach for calculating sentiment polarity values for adverbs is very similar to the approach used for adjectives. In fact, since WordNet does not define neither $r_\mathrm{similar}$ nor $r_\mathrm{see\text{-}also}$ on adverbs the basic approach is simply to lookup the adjective from which the adverb is derived from, if any, using $r_\mathrm{pertainym}$. However since adverbs might also \emph{intensify} or \emph{qualify} the meaning of a verb, adjective, or another adverb, some special treatment are presented for this. Analog to the positive and negative concepts, sets of respectively intensifying and qualifying seed adjectives are stated, e.g.\ (\ref{eq:s_itensify}) and (\ref{eq:s_qualify}).
-\todo{Rethink those?}
 \begin{align}
 	S_\mathrm{intensify} &= \left\{ \text{extreme}\#1, \text{much}\#1, \text{more}\#1)\right\} \label{eq:s_itensify}\\
 	S_\mathrm{qualify} &= \left\{ \text{moderate}\#1, \text{little}\#1, \text{less}\#1) \right\} \label{eq:s_qualify}
@@ -282,7 +285,7 @@ The value of a polarity scaling is then given by the exponential function (\ref{
     \label{eq:p_scale}
 \end{align}
 
-Whether an adverb is considered and intensifier/qualifier or an normal adverb is determined by the value of $p_\mathrm{scale}(\ell')$, where $\ell'$ is the pertainym of the adverb. The semantic expression of an adverb with type $\tau_\alpha \to \tau_\alpha$ is given by $e_\mathrm{adverb}(\ell)$ in (\ref{eq:e_adverb}). If $p_\mathrm{scale}(\ell') \neq 1$ then the adverb is considered as a intensifier/qualifier and scales the lexical unit it inflicts, otherwise if the adverb is an derivation of an adjective it simply changes the inflicted unit with the value of the adjective. Finally the adverb can be one of a small set of predefined negatives, $L_\mathrm{neg}$, in this case the polarity of the inflicted unit is flipped. Otherwise the adverb is discarded by simply being annotated with the identity function.
+Whether an adverb is considered an intensifier/qualifier or an normal adverb is determined by the value of $p_\mathrm{scale}(\ell')$, where $\ell'$ is the pertainym of the adverb. The semantic expression of an adverb with type $\tau_\alpha \to \tau_\alpha$ is given by $e_\mathrm{adverb}(\ell)$ in (\ref{eq:e_adverb}). If $p_\mathrm{scale}(\ell') \neq 1$ then the adverb is considered as a intensifier/qualifier and scales the lexical unit it inflicts, otherwise if the adverb is an derivation of an adjective it simply changes the inflicted unit with the value of the adjective. Finally the adverb can be one of a small set of predefined negatives, $L_\mathrm{neg}$, in this case the polarity of the inflicted unit is flipped. Otherwise the adverb is discarded by simply being annotated with the identity function.
 \begin{align}
 	e_\mathrm{adverb}(\ell) &=
 	\begin{cases}    
@@ -297,12 +300,12 @@ Whether an adverb is considered and intensifier/qualifier or an normal adverb is
 \section{Completing the analysis}
 All the components needed in order to calculate the sentiment for entities in a text have now been presented. The final step is to connect the components in a pipeline, allowing to compute the complete analysis originally presented originally in the start of Chapter~\ref{chap:sentimentAnalysis}. Recall that the presented analysis in a calculation of type $(\ref{eq:Analysis})$, repeated here for convenience.
   \begin{align}
-	 \mathcal{A}: \Sigma^\star \to S \to [-\omega;\omega] \tag{\ref{eq:Analysis}}	 
+	 \mathcal{A}: \Sigma^\star \to \mathbb{E} \to [-\omega;\omega] \tag{\ref{eq:Analysis}}	 
   \end{align}
 
 After initial preprocessing (i.e.\ tokenization), the text is processed by the lexical-syntactic analysis using the C\&C toolchain. The resulting lexicon is annotated with semantic expressions using the algorithms and semantic network structures described previous in this chapter. The deduction proof is then reconstructed based on the partial (i.e.\ syntax only) proof from the C\&C toolchain. The resulting deduction proof uses the combinator rules over both lexical and semantic expressions presented in Chapter~\ref{chap:ccg}. During the reconstruction process, semantic expressions are reduced using the rewrite rules presented in Section~\ref{sec:extendingSemantics}. If these steeps completes successfully the deduction proof should yield a conclusion for a sentence with a \emph{closed} semantic expression. By \emph{closed} semantic expression is meant that the expression is only consisting of functors and sequences. Details and examples of what might fail during this process will be elaborated upon evaluation of the system in Chapter~\ref{chap:evaluation}.
 
-The resulting semantic expression, $e$, is then inspected by the auxiliary sentiment extraction function $\mathcal{E} : S \to \Lambda \to \mathcal{P}([-\omega; \omega])$ cf. Definition~\ref{def:extract}.
+The resulting semantic expression, $e$, is then inspected by the auxiliary sentiment extraction function $\mathcal{E} : \mathbb{E} \to \Lambda \to \mathcal{P}([-\omega; \omega])$ cf. Definition~\ref{def:extract}.
 \begin{definition}
 	The extraction of sentiment, for a given \emph{subject of interest}, $s$, from a given semantic expression, $e$, is defined recursively by the function $\mathcal{E}$ cf.\ \ref{eq:extract}. If the expression is a functor with \emph{same} name as the \emph{subject of interest}, then the sentiment value of this functor is included in the resulting set, otherwise the value is simply discarded. In both cases the function is recursively applied to the subexpressions of the funtor. If the expression is a sequence, the function is simply recursively applied to all subexpressions in the sequence. Should the expression unexpectively include expressions of other kinds than functors and sequences, the function just yields the empty set.
 \begin{align}
@@ -315,11 +318,11 @@ The resulting semantic expression, $e$, is then inspected by the auxiliary senti
 	\end{cases}
 	\label{eq:extract}
 \end{align}
-\label{def:extract}.
+\label{def:extract}
 \done
 \end{definition}
 
-Finally the algorithm for the complete sentiment analysis can be formulated cf.\ Figure~\ref{algorithm}. The \textsc{Select} function simply selects the strongest opinion extracted (i.e. the sentiment with largest absolute value). This is a very simple choice but are sufficient for evaluating the algorithm, which will be done in Chapter~\ref{chap:evaluation}.
+Finally the algorithm for the complete sentiment analysis can be formulated cf.\ Figure~\ref{algorithm}. The \textsc{Select} function simply selects the strongest opinion extracted (i.e. the sentiment with largest absolute value). This is a very simple choice but are sufficient for evaluating the algorithm, which will be done in Chapter~\ref{chap:evaluation}. %\todo{Pronoun?}
 \begin{figure}[ht]
 \begin{cframed}{.9\textwidth}
 \vspace{-1em}

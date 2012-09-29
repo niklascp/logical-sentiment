@@ -11,14 +11,14 @@
 %==================================================================================================
 % BASE PACKAGES
 %==================================================================================================
-\usepackage[utf8]{inputenc}					          %Allows input of tex files encoded in UTF8
+\usepackage[utf8]{inputenc}					                %Allows input of tex files encoded in UTF8
 \usepackage[T1]{fontenc}                            %Set font encoding for output PDF 
-\usepackage[danish,english]{babel}			          %Allows langauge switching (English is default)
-\usepackage{graphicx}							          %Support for including graphics
+\usepackage[danish,english]{babel}			            %Allows langauge switching (English is default)
+\usepackage{graphicx}							                  %Support for including graphics
 \usepackage{xcolor}                                 %Support for using colours
 \usepackage[hang,normalsize,bf]{caption}            %Make pretty captions
 \usepackage{hyperref}                               %References package
-\usepackage{varioref}							          %Enhances references (\vref {label})
+\usepackage{varioref}							                  %Enhances references (\vref {label})
 \usepackage{fancyhdr}                               %Pretty headers/footers
 \usepackage{amsmath,amssymb,latexsym}               %AMS and other symbols
 \usepackage{epic,eepic,epsfig,graphics,psfrag}      %Figure/picture packages
@@ -56,7 +56,7 @@
 % GENERATE DERIVED THESIS PROPERTIES
 %==================================================================================================
 \newcommand{\derivethesisprops}{
-   \def\ttitle{{\sf\textbf{\thesistitle}}}
+   \def\ttitle{{\sf\textbf{A Logical Approach to\\[8pt] Sentiment Analysis}}}
    \def\thesisdef{IMM-MSc-\thesisyear-\thesisnumber}   %For MSc's you can modify this
    \def\printversion{print}
    \ifx\thesisversion\printversion
@@ -121,7 +121,6 @@
 \newtheorem{lemma}{Lemma}[chapter]
 \newtheorem{proposition}[lemma]{Proposition}
 \newtheorem{theorem}[lemma]{Theorem}
-\newtheorem{thesis}[lemma]{Thesis}
 \newtheorem{corollary}[lemma]{Corollary}{\theorembodyfont{\rmfamily}
 \newtheorem{definition}[lemma]{Definition}}\theoremheaderfont{\scshape\bfseries}
 \newenvironment{proof}{{\scshape Proof.}}{}

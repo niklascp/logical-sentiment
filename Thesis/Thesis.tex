@@ -19,6 +19,29 @@
 % PACKAGES
 %==================================================================================================
 \usepackage{ImmThesis}                              %Import Thesis base style 
+
+%==================================================================================================
+% THESIS PROPERTIES (Modifiy these fields with your details)
+%==================================================================================================
+\def\thesisauthor{Niklas Christoffer Petersen}            %Author 
+\def\thesistitle{A Logical Approach to Sentiment Analysis}      %Title
+\def\thesishandin{September 30}                       %Submission date (Day-Month}
+\def\thesisyear{2012}                             %Submission year 
+\def\thesisnumber{126}                            %DTU-IMM Serial number (do not include year)
+\def\thesisISSN{0000-0000}                          %ISSN number
+\def\thesiskeywords{Keywords are, comma separated}  %PDF keywords 
+\derivethesisprops                                  %Derive dependent properties
+%
+%==================================================================================================
+% SECTION NUMBERING SETUP
+%==================================================================================================
+\setcounter{tocdepth}{2}                            %2 adds sections up to subsections
+\setcounter{secnumdepth}{3}                         %Subsubsections get a number when this is 3
+%
+%==================================================================================================
+% THESIS STRUCTURE  (Modifiy to include more chapters etc)
+%==================================================================================================
+
 \usepackage{named}
 
 \usepackage{framed}
@@ -41,8 +64,13 @@
 \usepackage{listingsutf8}
 \usepackage{clrscode3e}
 
+
 % Pdf
-\usepackage{pdflscape}
+\ifx\thesisversion\printversion
+  \usepackage{lscape}
+\else
+  \usepackage{pdflscape}
+\fi
 
 \lstdefinelanguage{GHC}{
   morekeywords={module,import,qualified,as,hiding,let,return,data,type,case,of,infix,deriving,class,where,do,instance},
@@ -131,32 +159,6 @@
   }
 }
 
-%\setlength{\abovecaptionskip}{30pt}
-
-
-%input{PhDMacros}                                   %Thesis specific macros 
-%
-%==================================================================================================
-% THESIS PROPERTIES (Modifiy these fields with your details)
-%==================================================================================================
-\def\thesisauthor{Niklas Christoffer Petersen}      			%Author	
-\def\thesistitle{A Logical Approach to\\[8pt] Sentiment Analysis\\[8pt]DRAFT C}      %Title
-\def\thesishandin{September 30}					          		%Submission date (Day-Month}
-\def\thesisyear{2012} 							          		%Submission year 
-\def\thesisnumber{????}  						          		%DTU-IMM Serial number (do not include year)
-\def\thesisISSN{0000-0000}                          %ISSN number
-\def\thesiskeywords{Keywords are, comma separated}  %PDF keywords 
-\derivethesisprops                                  %Derive dependent properties
-%
-%==================================================================================================
-% SECTION NUMBERING SETUP
-%==================================================================================================
-\setcounter{tocdepth}{2}                            %2 adds sections up to subsections
-\setcounter{secnumdepth}{3}                         %Subsubsections get a number when this is 3
-%
-%==================================================================================================
-% THESIS STRUCTURE  (Modifiy to include more chapters etc)
-%==================================================================================================
 \begin{document}
 %------------------------                                    
 %Pre-frontmatter material
@@ -201,10 +203,10 @@
 \appendix
 \include{A1-Brown}							              %Appendix A
 %\include{A2-Source}                           %Appendix B
-\include{A3-Test}                           %Appendix B
+\include{A3-Test}                             %Appendix B
 %-----------
 % Backmatter
-%-----------
+%-----------d
 \backmatter
 \chaptermark{Bibliography}
 \renewcommand{\sectionmark}[1]{\markright{#1}}

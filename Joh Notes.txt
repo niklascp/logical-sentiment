@@ -1,0 +1,11 @@
+
+Thesis "environment"
+19: Diamon / Start - Restrictive formulation.
+
+
+
+overordnede kommentarer:
+Rigtig god rapport. Godt læseligt skrevet. Du går lidt hurtigt henover dine definitioner og formler. Her kunne jeg godt bruge mere forklaring. Især hvad de enkelte variabler betyder. Til sidst i introduktionen kunne jeg godt bruge en oversigt over hvad du vil komme igennem i rapporten.
+[26/09/12 22.43.33] Michael Lunøe: men igen det kan sagtens være det bare er mig der ikke fatter det
+[26/09/12 22.44.00] Michael Lunøe: og det er for meget at gå i detaljer med, men bliver lidt forvirret engang imellem..
+[26/09/12 22.44.22] Michael Lunøe: jeg glæder mig til dit design og implementations afsnit

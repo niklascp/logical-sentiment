@@ -3,30 +3,78 @@
 \chapter{Evaluation}
 \label{chap:evaluation}
 
-This chapter evaluates the presented logical approach for sentiment analysis, specifically the \emph{proof of concept} implementation presented in the previous section. In order to truly classify the capabilities of the system, real test-data are needed. In this chapter a test data set is introduced, and results from evaluation of the system on this set are presented. The results are explained, and it is considered weather the robustness and the correctness of the solution is significantly high enough for real applications.
+This chapter evaluates the presented logical approach for sentiment analysis, specifically the \emph{proof of concept} implementation presented in the previous section. In order to truly classify the capabilities of the system, real test-data are needed. In this chapter a test data set is introduced, and results from evaluation of the system on this set are presented. The results are explained, and it is considered whether the robustness and the correctness of the solution is significantly high enough for real applications.
 
 \section{Test data set}
 There are several \emph{free to use} labeled review data set available (most of them consisting of movie reviews for some reason). However recall that most research have focused on classifying sentiment on document, sentence or simply on word level, but not on entity level cf.\ Section~\vref{sec:logicalApproach}. This mean that it unfortunately has not been possible to find any free data set there are labeled on entity level. %, and the fact that they are labeled on other levels does not really .
 
-The test data set chosen for evaluation of the system is the \emph{Opinosis Dataset} \cite{Opinosis}. The data set consists of  approximately $\num{7000}$ texts from actual user reviews on number of different topics. The topics are ranging over different product and services, from consumer electronics (e.g.\ GPS navigation, music players, etc.) to hotels and restaurants. They are harvested from several online resellers and service providers, including i.a.\ \emph{Amazon}\footnote{Amazon, \url{http://www.amazon.com/}} and \emph{TripAdvisor}\footnote{TripAdvisor, \url{http://www.tripadvisor.com/}}. The dataset are neither labeled on entity level (or any other level for that matter), since it originally was used for evaluating an \emph{automatic summarization} project by \citeauthor{Opinosis} However the source of the reviews was one of the main reasons to use \emph{Opinosis Dataset} for the evaluation, since it was one of the original goals of the project, that a solution could process real data from actual businesses.
+The test data set chosen for evaluation of the system is the \emph{Opinosis data set} \cite{Opinosis}. The data set consists of  approximately $\num{7000}$ texts from actual user reviews on a number of different topics. The topics are ranging over different product and services, from consumer electronics (e.g.\ GPS navigation, music players, etc.) to hotels and restaurants. They are harvested from several online resellers and service providers, including i.a.\ \emph{Amazon}\footnote{Amazon, \url{http://www.amazon.com/}} and \emph{TripAdvisor}\footnote{TripAdvisor, \url{http://www.tripadvisor.com/}}. The dataset are neither labeled on entity level (or any other level for that matter), since it originally was used for evaluating an \emph{automatic summarization} project by \citeauthor{Opinosis} However the source of the reviews was one of the main reasons to use \emph{Opinosis Dataset} for the evaluation, since it was one of the original goals of the project, that a solution could process real data from actual businesses.
 %For most of the product and services, reviews are covered by multiple topics. For instance a specific hotel may be covered by the topics \emph{rooms}, \emph{location}, \emph{price} and \emph{service}. 
 %Especially the 
 %The data set is collected through a method that closely resembles the \emph{opinion seeking queries} presented back in Section~\vref{sec:naturalDataCollection}. 
 %It has been hard to find any real alternatives for the \emph{Opinosis Dataset} for several reasons: Most collected reviews are commercial, and thus not free to use; furthermore the \emph{Opinosis Dataset} also contains summerized texts for each of its topics, which are constructed by manual, human interpretation. The latter allow a straight approach for comparison of any results the proposed system will yield.\\
 
-After a coarse review of the data set it is safe to argue that the data set chosen for evaluation indeed includes all of the problematics discussed in Section~\vref{sec:realData}. Since the data set is unlabeled is was chosen to label a small subset of it in order to measure the robustness and the correctness of the presented solution. To avoid biases toward how the proof of concept system analyzes text the labeling was performed independently by two individuals which had no knowledge of how the presented solution processes texts. As the example texts throughout this thesis might have hinted, the subset chosen was from the set of hotel and restaurant reviews. It was of cause a subset that had not previously been used to test the implementation during development, however fixing the evaluation on the domain of hotel and restaurant reviews allowed the choice of relevant seed concepts cf.\ Section~\ref{sec:sentimentAdj}. The \emph{subject of interest} chosen for the analysis were \emph{rooms}, and the subset was thus randomly sampled from text containing this entity (in any morphological form), since there otherwise are no chance the proof of concept system can yield a result for the text.
+After a coarse review of the data set it is safe to argue that the data set chosen for evaluation indeed includes all of the problematics discussed in Section~\vref{sec:realData}. Since the data set is unlabeled is was chosen to label a small subset of it in order to measure the robustness and the correctness of the presented solution. To avoid biases toward how the proof of concept system analyzes text the labeling was performed independently by two individuals which had no knowledge of how the presented solution processes texts. As the example texts throughout this thesis might have hinted, the subset chosen was from the set of hotel and restaurant reviews. It was of cause a subset that had not previously been used to test the implementation during development, however fixing the evaluation on the domain of hotel and restaurant reviews allowed the choice of relevant seed concepts cf.\ Section~\ref{sec:sentimentAdj}. The \emph{subject of interest} chosen for the analysis were \emph{hotel rooms}, and the subset was thus randomly sampled from texts with high probability of containing this entity (i.e.\ containing any morphological form of the noun ``room''). This approach were chosen, since there otherwise are no chance the proof of concept system can yield a result for the text.
 
-The individuals were given a subset of 35 review texts, and should mark each text as either positive, negative or unknown \emph{with respect to the given subject of interest}. Out of the 35 review text the two subject's positive/negative labeling agreed on 34 of them, while unknowns and disagreements were discarded. Thus the inter-human \emph{concordance} for the test data set is $97.1\%$, which is very high, and would arguable drop significantly if just a few more individuals were used for label annotation. The full subset samples, as well as each subjects marking is available in Table~\ref{table:labeling} in Appendix~\ref{chap:testData}.
+The individuals were given a subset of 35 review texts, and should mark each text as either positive, negative or unknown \emph{with respect to the given subject of interest}. Out of the 35 review text the two subject's positive/negative labeling agreed on 34 of them, while unknowns and disagreements were discarded. Thus the inter-human \emph{concordance} for the test data set was $97.1\%$, which is very high, and would arguable drop significantly if just a few more individuals were used for label annotation. The full subset samples, as well as each subjects marking is available in Table~\ref{table:labeling} in Appendix~\ref{chap:testData}.
 
 \section{Test results}
-The test data set was processed by the proof of concept system and the system was able to yield an sentiment value for the ``room'' entity for just $32.4\%$ of the test text. A entity sentiment value is considered to \emph{agree} with the human labeling, if had the correct sign (i.e. positive sentiment values agreed with positive labels, and negative values with negative labels). As mentioned it is hard to compare the results to any baseline, since no published results has been obtainable for entity-level sentiment analysis. The baseline presented here is thus a sentence-level baseline, calculated by using the Natural Language Toolkit (NLTK) for Python using a Naive Bayes Classifier (trained on movie reviews though rather then hotel reviews). Both the raw sentiment values calculated by the presented solution, and the baseline classification is also available and the raw results are also available Table~\ref{table:labeling}. Table~\ref{table:results} shows the precision and recall results for both the baseline, and the presented solution. As seen the recall is somewhat low for the presented solution, which is addressed in a moment, while it is argued that precision is acceptable, since a precision. 
+The test data set was processed by the proof of concept system and the system was able to yield an sentiment value for the ``room'' entity for just $32.4\%$ of the test texts. A entity sentiment value is considered to \emph{agree} with the human labeling, if had the correct sign (i.e. positive sentiment values agreed with positive labels, and negative values with negative labels). As mentioned it is hard to compare the results to any baseline, since no published results has been obtainable for entity level sentiment analysis. The baseline presented here is thus a sentence-level baseline, calculated by using the Natural Language Toolkit (NLTK) for Python using a Naive Bayes Classifier (trained on movie reviews though rather than hotel reviews). Both the raw sentiment values calculated by the presented method, and the baseline classification are also available for each text in the test data set in Table~\ref{table:labeling} in Appendix~\ref{chap:testData}. The \emph{precision} and \emph{recall} results for both the baseline, and the presented method are shown in Table~\ref{table:results}. As seen the recall is somewhat low for the proof of concept system, which is addressed in the next section, while it is argued that precision of the system is indeed acceptable, since even humans will not reach a 100\% agreement.
 \begin{table}[ht]
 \center
 \begin{tabular}{l|rr}
-	          & Baseline & Entity-level \\ \hline
+	          & Baseline & Presented method \\ \hline
 	Precision & $71.5\%$ & $90.1\%$ \\
 	Recall    & $44.1\%$ & $29.4\%$ 
 \end{tabular}
 \caption{Precision and recall results for proof of concept system.}
 \label{table:results}
 \end{table}
+
+\section{Understanding the results}
+To investigate the low recall, focus was turned to clarifying why the presented method only yields results for $32.4\%$ of the test data set. The C\&C toolchain was able to give a syntactic deduction proof for $94.4\%$ of the test data set. However after closer inspection of the proofs constructed for texts in the test data set, it was discovered that approximately only half of these proofs were correct, given that the grammar of the input sentence also was correct. This is of cause a major handicap for the presented method, since it is highly reliable on correct deduction proofs. 
+
+The reason the C\&C toolchain behaves so inadequately is indeed expected, and thus a low racall was also expected, even though it is lower then hoped for. Recall from Section~\ref{sec:maxEntropy} that the C\&C parser could recognize 98.4\% of unseen data. However there is one major assumption if this promise should be met: the probability distribution of the input should of cause follow the same distribution as the training data that the C\&C models was created from. The models were trained on \emph{The CCGbank} \cite{ccgBank} and thereby follows the distribution of \emph{The Penn Treebank} \cite{pennTreebank}. That this follows a different probability distribution than the Opinosis data set may not be that surprising, since the treebank consists mostly of well-written newspaper texts. To illustrate this consider Figure~\ref{fig:distBias} which shows the distribution of sentence length (i.e.\ number of words) in: the set of hotels and restaurants reviews of Opinosis ($\num{2059}$ sentences); and respectively a subset of Wall Street Jounal (WSJ) corpus, which is a representative and \emph{free to use} sample of The Penn Treebank ($\num{3914}$ sentences). This measure gives a clear indication that the two data sets indeed follows different probability distributions.
+\begin{figure}[ht]
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[
+	%ybar,
+	small,
+	enlargelimits=0.0,
+	enlarge y limits=upper,	
+	legend pos=north east,
+	legend style={draw=none,legend columns=-1,cells={anchor=west},
+	nodes={inner sep=1pt,below=-4pt},font=\footnotesize},
+	legend style={/tikz/every even column/.append style={column sep=8pt}},
+	width=.8\textwidth,
+	height=6cm,
+	xlabel={Sentence length in number of words},
+	yticklabel={$\pgfmathprintnumber{\tick}$\%},
+]
+\addplot[magenta!80!black] table [col sep=comma,trim cells=true,y=y1] {wsjdist.dat};
+\addplot[cyan!80!black] table [col sep=comma,trim cells=true,y=y2] {wsjdist.dat};
+\legend{Hotels and restaurants,WSJ}
+\end{axis}
+\end{tikzpicture}
+\end{center}
+\vspace{-1em}
+\caption{Sentence length distribution in representative subsets of Opinosis and The Penn Treebank.}
+\label{fig:distBias}
+\end{figure}
+
+At best this may however only explain half of missing results. To explain the rest focus needs to be turned to those sentences for which the C\&C toolchain constructs proofs correctly, but does not yield any results. Consider Figure~\ref{fig:verbSentiment} which shows the deduction proof for test sentence \#9, which most humans, like the two individuals used for labeling, would agree expressed a positive opinion about the rooms. However it is worth noticing, that the semantic expression in the conclusion of the proof, i.e.\ $\mathrm{furnish}_{95.0}^{0}(\mathrm{room}_{0.0})$, indeed contains a positive sentiment value. 
+
+\begin{figure}[ht]
+\begin{center}
+\scalebox{.5}{
+$
+\inference[<]{\inference[<]{\inference{\inference{\token{Rooms}\\\pos{NNS}}{\cat{N}_{}:\mathrm{room}_{0.0}}}{\cat{NP}_{}:\mathrm{room}_{0.0}}\inference[>]{\inference[<B_\times]{\inference{\token{were}\\\pos{VBD}}{(\cat{S}_{dcl} \bsl \cat{NP}_{})/(\cat{S}_{pss} \bsl \cat{NP}_{}):\lambda x.x}\inference{\token{nicely}\\\pos{RB}}{(\cat{S}_{X} \bsl \cat{NP}_{}) \bsl (\cat{S}_{X} \bsl \cat{NP}_{}):\lambda x.(x_{\circ 95.0})}}{(\cat{S}_{dcl} \bsl \cat{NP}_{})/(\cat{S}_{pss} \bsl \cat{NP}_{}):\lambda x.(x_{\circ 95.0})}\inference{\token{furnished}\\\pos{VBN}}{\cat{S}_{pss} \bsl \cat{NP}_{}:\lambda x.\mathrm{furnish}_{0.0}^{0}(x)}}{\cat{S}_{dcl} \bsl \cat{NP}_{}:\lambda x.\mathrm{furnish}_{95.0}^{0}(x)}}{\cat{S}_{dcl}:\mathrm{furnish}_{95.0}^{0}(\mathrm{room}_{0.0})}\inference{\token{.}\\\pos{.}}{\cat{S}_{dcl} \bsl \cat{S}_{dcl}:\lambda x.x}}{\cat{S}_{dcl}:\mathrm{furnish}_{95.0}^{0}(\mathrm{room}_{0.0})}
+$
+}
+\end{center}
+\caption{Sentence positive about \emph{room}, but with no sentiment value on its functor.}
+\label{fig:verbSentiment}
+\end{figure}
+
+In the next chapter solutions for these problems are proposed and discussed, and it is argued that even though the recall results for the test data set are unacceptable low, applications for the presented method are indeed possible given some additional effort.
