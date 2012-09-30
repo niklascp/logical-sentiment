@@ -35,7 +35,7 @@ subst e@(Abs x e1) x' e'  | x == x'   =
                               -- x is bound in e, so do not continue
                               e
                           | x `elem` free e' = 
-                              -- x ∈ FV(e'), need α-conversion of x:
+                              -- x is in FV(e'), need alpha-conversion of x:
                               let x'' = head $ xVars \\ (free e1 `union` free e')
                               in  subst (Abs x'' $ subst e1 x (Var x'')) x' e'
                           | otherwise =
@@ -59,21 +59,26 @@ reduce (Fun f j k ts)             = Fun f j k $ map reduce ts
 reduce (Seq ts)                   = Seq $ map reduce ts
 -- FC1, FC2, SC and PC rules:
 reduce (Change (Fun f j 0 ts) j') = Fun f (j + j') 0 $ map reduce ts
-reduce (Change (Fun f j k ts) j') = Fun f j k $ map reduce $ (take (k - 1) ts) ++ [Change (ts !! (k - 1)) j'] ++ (drop k ts)
+reduce (Change (Fun f j k ts) j') = Fun f j k $ map reduce $ (take (k - 1) ts) ++ 
+                                        [Change (ts !! (k - 1)) j'] ++ (drop k ts)
 reduce (Change (Seq ts) j')       = Seq $ map (reduce . flip Change j') ts
 reduce (Change (Abs x t) j')      = Abs x $ reduce $ Change t j'
 reduce (Change t j)               = if (t /= t') then (reduce $ Change t' j) else (Change t' j)
                                     where t' = reduce t
 -- FS1, FC2, SS and PS rules:
 reduce (Scale (Fun f j 0 ts) j')  = Fun f (if j == 0 then j' else j * j') 0 $ map reduce ts
-reduce (Scale (Fun f j k ts) j')  = Fun f j k $ map reduce $ (take (k - 1) ts) ++ [Scale (ts !! (k - 1)) j'] ++ (drop k ts)
+reduce (Scale (Fun f j k ts) j')  = Fun f j k $ map reduce $ (take (k - 1) ts) ++  
+                                        [Scale (ts !! (k - 1)) j'] ++ (drop k ts)
 reduce (Scale (Seq ts) v)         = Seq $ map (reduce . flip Scale v) ts
 reduce (Scale (Abs x t) v)        = Abs x $ reduce $ Scale t v
 reduce (Scale t j)                = if (t /= t') then (reduce $ Scale t' j) else (Scale t' j)
                                     where t' = reduce t
 -- IC rule:
 reduce (ImpactChange (Fun f j k ts) k') = Fun f j k' ts
-reduce (ImpactChange t k')              = if (t /= t') then (reduce $ ImpactChange t' k') else (ImpactChange t k')
+reduce (ImpactChange t k')              = if (t /= t') then 
+                                            (reduce $ ImpactChange t' k') 
+                                          else 
+                                            (ImpactChange t k')
                                           where t' = reduce t
 -- Otherwise
 reduce x                            = x
@@ -107,16 +112,19 @@ isComplexExpr _                  = False
 -- | Pretty printing of data structures
 instance Show SExpr where
   showsPrec d (Var x)          = (showString x)
-  showsPrec d (Abs x t)        = (showString $ "λ" ++ x ++ ".") . (shows t)
+  showsPrec d (Abs x t)        = (showString $ "\\" ++ x ++ ".") . (shows t)
   showsPrec d (App t1 t2)      = (showParen (isComplexExpr t1) (shows t1)) .
                                  (showString " ") . 
                                  (showParen (isComplexExpr t2) (shows t2))
   showsPrec d (Fun f j _ [])   = (showString $ f ++ "'" ++ (show j))
-  showsPrec d (Fun f j k ts)   = (showString $ f ++ "'" ++ (show j) ++ "(") . (showList' ts) . (showString ")")
-                                   where showList' :: Show a => [a] -> ShowS
-                                         showList' [] = showString ""
-                                         showList' [a] = shows a
-                                         showList' (a1:a2:as) = (shows a1) . (showString ", ") . (showList' (a2:as))  
+  showsPrec d (Fun f j k ts)   = (showString $ f ++ "'" ++ (show j) ++ "(") . 
+                                 (showList' ts) . (showString ")")
+                                 where showList' :: Show a => [a] -> ShowS
+                                       showList' [] = showString ""
+                                       showList' [a] = shows a
+                                       showList' (a1:a2:as) = (shows a1) . 
+                                                              (showString ", ") . 
+                                                              (showList' (a2:as))  
   showsPrec d (ImpactChange t k') = (shows t) . (showString "->") . (shows k')
   showsPrec d (Seq ts)         = (shows ts)
   showsPrec d (Change t1 v)    = (shows t1) . (showString "⚪") . (shows v)

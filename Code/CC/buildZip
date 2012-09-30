@@ -1,0 +1,4 @@
+rm Code.zip
+zip Code.zip Readme Annotate.hs CCG.hs Lambda.hs Main.hs Parser.hs Unification.hs WordNet.hs
+zip Code.zip WordNet/*.hs
+zip Code.zip bin/soap_client_fix

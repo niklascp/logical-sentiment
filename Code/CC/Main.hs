@@ -3,7 +3,6 @@
 module Main where
 import Data.Map (Map)
 import qualified Data.Map as Map
-import Data.Graph.Inductive
 import Data.Maybe
 import Data.Char
 import Control.Monad
@@ -12,18 +11,13 @@ import Parser
 import CCG
 import Annotate
 
-import Pretty
-
 import WordNet hiding (Word)
-import qualified WordNet.Prims as P
-
-import Debug.Trace
-
 
 matchE :: String -> String -> Bool
 matchE s s' = (map toLower s') == s      ||
               (map toLower s') == "it"   ||
-              (map toLower s') == "they"    
+              (map toLower s') == "they" ||
+              (map toLower s') == "them"     
 
 extract :: String -> SExpr -> [Float]
 extract s (Fun s' j _ es) | matchE s s' = j:(concat $ map (extract s) es)
@@ -31,20 +25,18 @@ extract s (Fun s' j _ es) | matchE s s' = j:(concat $ map (extract s) es)
 extract s (Seq es)                      = (concat $ map (extract s) es)
 extract _ _                             = []
 
-analyse :: (Word -> Word) -> CcEnv -> String -> (String, Int) -> IO ((Int, Maybe Float))
-analyse annotationAlgorithm ccEnv subject (sentence, index) = do
-  tree <- runCcEnv ccEnv annotationAlgorithm sentence
+analyse :: (Word -> Word) -> String -> (String, Int) -> IO ((Int, Maybe Float))
+analyse annotationAlgorithm subject (sentence, index) = do
+  tree <- runCc annotationAlgorithm sentence
   if (isJust tree) then do
-    latexify (fromJust tree) index
     let sexpr = nodeExpr $ fromJust tree
-    putStr $ show sexpr
     let r = extract subject sexpr
-    let m = (maximum r) + (abs (minimum r))
+    let m = (maximum r) + (minimum r)
     if (null r) then return (index, Nothing)
     else if (m > 0) then
-      return $ (index, Just (maximum r))
+      return $ (index, Just $ maximum r)
     else if (m < 0) then
-      return $ (index, Just (minimum r))
+      return $ (index, Just $ minimum r)
     else
       return (index, Nothing)
   else
@@ -54,7 +46,6 @@ analyse annotationAlgorithm ccEnv subject (sentence, index) = do
 
 main :: IO ()
 main = do wne <- initializeWordNetWithOptions Nothing Nothing          
-          ccEnv <- createCcEnv
 
           -- Define positive concepts
           let adj_pos_list = [("good", 1), ("beautiful", 1), ("pleasant", 1),   ("clean", 1), ("quiet", 1), ("friendly", 1),   ("cheap", 1), ("fast", 1), ("large", 1),("nice",1)]
@@ -114,7 +105,7 @@ main = do wne <- initializeWordNetWithOptions Nothing Nothing
           reviewData <- liftM lines $ readFile "../Data/rooms_swissotel_chicago_a.txt"           
           
           -- Analyse
-          result <- mapM (analyse (annotateWord env) ccEnv "room") $ zip reviewData [1..]
+          result <- mapM (analyse (annotateWord env) "room") $ zip reviewData [1..]
 
           -- Print results
           putStr "\n\n"

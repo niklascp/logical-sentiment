@@ -3,11 +3,9 @@
 \chapter{Source code}
 \label{chap:source}
 
-Complete source code for the proof of concept solution presented can be downloaded from the url: \url{http://www.student.dtu.dk/~s072466/msc.zip}. The following appendix also includes 
+Complete source code for the proof of concept solution presented can be downloaded from the url: \url{http://www.student.dtu.dk/~s072466/msc.zip}.
 
-
-Note: Appendix med kildekode -- komplet oversigt over filer / ansvar -- Udvalgte filer inkluderet.
-
+The following lists the essential Haskell code files for the implementation. \texttt{Main.hs} defines the extraction and analysis algorithms, i.e. $\mathcal{E}$ and $\mathcal{A}$, and also includes the main entry point for the application. The syntax and semantics for the semantic expressions are defined in \texttt{Lambda.hs}. The implementation of Combinatory Categorial Grammar (CCG) is defined by \texttt{CCG.hs}, and \texttt{Annotate.hs} defines both the generic annotation algorithm $\mathcal{U}_\textsc{gen}$, as well as the special case annotation algorithms. Finally \texttt{Parser.hs} defines the parser for the output from the C\&C toolchain. The following listing thus thereby not include the WordNet interface.
 
 \section*{Main.hs}
 \lstinputlisting[basicstyle=\tiny]{\source/Main.hs}

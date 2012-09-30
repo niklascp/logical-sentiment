@@ -21,7 +21,7 @@ data AnnotationEnv = AnnotationEnv {
 
 -- Parameters for the annotation
 omega = 100
-n = 2
+n = 5
 
 -- | Unfold the graph using the given relation and seeds.
 unfoldG :: (Ord a) => (a -> [a]) -> [a] -> (Map a Node, Gr a Int)
@@ -52,7 +52,7 @@ unfoldST r seeds =
                      return i
      -- Visit seeds
      mapM visit seeds
-     -- Read resuls and return map/graph-pair
+     -- Read results and return map/graph-pair
      list <- readSTRef nodesRef         
      nodeMap <- readSTRef mapRef
      let nodes = [n | (n, _) <- list]
@@ -72,7 +72,7 @@ pAdj gr pns nns qns = (sum $ distAdj nns qns) - (sum $ distAdj pns qns)
 
 -- | Polarity value for scale graphs
 pScale :: Real b => Gr a b -> [Node] -> [Node] -> [Node] -> Float
-pScale gr pns nns qns = 2**(sum $ distScale nns qns) - (sum $ distScale pns qns)
+pScale gr pns nns qns = 2**((sum $ distScale nns qns) - (sum $ distScale pns qns))
                         where
                           distScale :: [Node] -> [Node] -> [Float]
                           distScale sns qns = take n $ sort [normScale (length (sp sn qn gr) - 1) | sn <- sns, qn <- qns]
@@ -111,12 +111,12 @@ annotateNoun env w@(Word { category = c, token = t, lemma = l })
     annotateAny env w
 
 annotateVerb env w@(Word { category = c, token = t, lemma = l })
-  | c =? (S [SDcl] :\ NP []):/(S [SAdj] :\ NP []) =
+  | c =? (S [FDcl] :\ NP []):/(S [FAdj] :\ NP []) =
     w { expr = lid } -- Linking verb
   | otherwise = annotateAny env w
 
 annotateAdj env w@(Word { category = c, lemma = l }) 
-  | (S [SAdj] :\ NP []) =? c || (NP [] :/ NP []) =? c || (N [] :/ N []) =? c = -- TODO: Do we need any check?
+  | (S [FAdj] :\ NP []) =? c || (NP [] :/ NP []) =? c || (N [] :/ N []) =? c =
     let query = (let ?wne = (wnEnv env) in search l Adj AllSenses)
         value = (adjFun env) query
     in  w { expr = (Abs "x" $ Change (Var "x") value) }
@@ -229,10 +229,10 @@ annotateLtc _ w@(Word { token = t, category = c, lemma = l }) =
 
 annotateWord :: AnnotationEnv -> Word -> Word
 annotateWord env w@(Word { pos = pos })
-  | isDet pos  = annotateDet env w
-  | isAdj pos  = annotateAdj env w
-  | isVerb pos = annotateVerb env w
+  | isDet pos    = annotateDet env w
+  | isAdj pos    = annotateAdj env w
+  | isVerb pos   = annotateVerb env w
   | isAdverb pos = annotateAdverb env w
-  | isNoun pos = annotateNoun env w
-  | isP pos    = annotateP env w
-  | otherwise  = annotateAny env w
+  | isNoun pos   = annotateNoun env w
+  | isP pos      = annotateP env w
+  | otherwise    = annotateAny env w

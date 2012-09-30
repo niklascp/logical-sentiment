@@ -9,8 +9,9 @@ import Lambda
 
 type Token = String   -- Lexical entry
 type Lemma = String   -- Lemma of lexical entry
-type Pos   = String     -- Part of spearch
+type Pos   = String   -- Part of spearch
 
+-- | Data structure for lexical units.
 data Word = Word { 
               token :: Token,
               lemma :: Lemma,
@@ -38,36 +39,31 @@ data Category = S           { agreement :: Agreement } -- Sentence
               | Category :\ Category                   -- Backward slash
               deriving (Eq)
 
-data Feature = Masc  | Fem  | Neutr | MascOrFem   -- Gender
-             | Sg    | Pl                         -- Number
-             | Fst   | Snd  | Thrd                -- Person
-             | Nom   | AccOrDat  | Gen            -- Case
-             | Pers  | Refl | Wh
-             | Tense | Infl
-             | On    | With | By | To | From      -- Preposition
-             | SDcl  | SAdj | SNb  | SNg  | SPt | SInv | SPss | SB | SEm   -- Sentence Type
-             | FThr
-             | FWq
-             | FQ
-             | FFor
-             | FQem
-             | FVar String
+data Feature = FDcl  | FAdj | FEm  | FInv  -- Sentence
+             | FTo   | FB   | FPt  | FPss  -- Verbs
+             | FNg   | FNb  | FFor
+             | FThr  | FFrg                -- Fragments
+             | FQ    | FWq  | FQem         -- Questions
+             | FVar String                 -- Variables
+             | FUnknown String             -- Unknowns
              deriving (Eq,Show)
 
 data PTree = PWord Word
-           | PFwdApp   { nCategory :: Category, nExpr :: SExpr, subTree1 :: PTree, subTree2 :: PTree }
-           | PBwdApp   { nCategory :: Category, nExpr :: SExpr, subTree1 :: PTree, subTree2 :: PTree }
-           | PFwdComp  { nCategory :: Category, nExpr :: SExpr, subTree1 :: PTree, subTree2 :: PTree }
-           | PBwdComp  { nCategory :: Category, nExpr :: SExpr, subTree1 :: PTree, subTree2 :: PTree }
-           | PBwdXComp { nCategory :: Category, nExpr :: SExpr, subTree1 :: PTree, subTree2 :: PTree }
-           | PFwdTR    { nCategory :: Category, nExpr :: SExpr, subTree1 :: PTree }
-           | PLexRaise { nCategory :: Category, nExpr :: SExpr, subTree1 :: PTree }
+           | PFwdApp   { nCategory :: Category, nExpr :: SExpr, n1 :: PTree, n2 :: PTree }
+           | PBwdApp   { nCategory :: Category, nExpr :: SExpr, n1 :: PTree, n2 :: PTree }
+           | PFwdComp  { nCategory :: Category, nExpr :: SExpr, n1 :: PTree, n2 :: PTree }
+           | PBwdComp  { nCategory :: Category, nExpr :: SExpr, n1 :: PTree, n2 :: PTree }
+           | PBwdXComp { nCategory :: Category, nExpr :: SExpr, n1 :: PTree, n2 :: PTree }
+           | PFwdTR    { nCategory :: Category, nExpr :: SExpr, n1 :: PTree }
+           | PLexRaise { nCategory :: Category, nExpr :: SExpr, n1 :: PTree }
            deriving (Eq,Show)
 
+-- | Gets the category of a node in the deduction tree.
 nodeCategory :: PTree -> Category
 nodeCategory (PWord w) = category w
 nodeCategory x         = nCategory x
 
+-- | Gets the semantic expression of a node in the deduction tree.
 nodeExpr :: PTree -> SExpr
 nodeExpr (PWord w) = expr w
 nodeExpr x         = nExpr x
@@ -84,15 +80,11 @@ instance Unifiable Category where
   (a :\ b)      =? (a' :\ b')     = a =? a' && b =? b'
   _             =? _              = False
 
+-- | Return if a category is compound.
 isComplex :: Category -> Bool
-isComplex (S _)           = False
-isComplex (N _)           = False
-isComplex (NP _)          = False
-isComplex (PP _)          = False
-isComplex (CONJ _)        = False
-isComplex (Punctuation _) = False
-isComplex (Comma _)       = False
-isComplex _               = True
+isComplex (_ :/ _) = True
+isComplex (_ :\ _) = True
+isComplex _        = False
 
 -- | Return the argument of the type inflicted by a compound category.
 arg :: Category -> Maybe Category
@@ -106,12 +98,12 @@ res (x:\_) = Just x
 res (x:/_) = Just x
 res _      = Nothing 
 
-
 -- | Pretty printing of Word
 instance Show Word where
   showsPrec d (Word { token = t, lemma = lemma, pos = p, category = c, expr = e }) = 
-    (showString t) . (showString "~") . (showString lemma) . (showString "/") . (showString p) .
-    (showString " ⊣ ") . (shows c) . (showString " : ") . (shows e)
+    (showString t) . (showString "~") . (showString lemma) . (showString "/") . 
+    (showString p) . (showString " ⊣ ") . (shows c) . (showString " : ") .
+    (shows e)
 
 -- | Pretty printing of Category
 instance Show Category where

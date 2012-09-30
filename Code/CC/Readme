@@ -1,0 +1,34 @@
+A LOGICAL APPROACH TO SENTIMENT ANALYSIS
+---------------------------------------------------------
+Source code for MSc project.
+Copyright (c) 2012 Niklas Christoffer Petersen
+
+
+The program expects the WordNet data files to be 
+located in the subdirectory:
+
+	./data
+
+The program communicates to the C&C tools through 
+a small script (included in the bin subdirectory), 
+which in turn communicates with the  SOAP client 
+distributed with the C&C tools. The script expects
+ the SOAP client to be located in the subdirectory:
+
+	./bin
+
+Remember to change the path of the input file to
+analyze in Main.hs:
+
+	reviewData <- liftM lines $ readFile "data.txt"           
+
+Also remember to state domain specific seed concepts,
+and the state the subject of interest of the analysis.
+
+To compile the program:
+
+	ghc -o main Main.hs
+
+To run, simply execute main
+
+	./main

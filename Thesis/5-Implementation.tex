@@ -25,7 +25,7 @@ data Category = S Agreement             -- Sentence
               | Category :/ Category    -- Forward slash
               | Category :\ Category    -- Backward slash
 
-data Feature = SDcl | SAdj | SNb | SNg | ...
+data Feature = FDcl | FAdj | FNb | FNg | ...
 \end{lstlisting}	
 \end{cframed}
 \caption{Example of declaring the data structure for categories.}
@@ -150,7 +150,7 @@ The construction of $(S', r')$ for some set of positive and negative seed semant
 
 Figure~\ref{fig:st} shows the Haskell code for unfolding semantic graphs. The actual unfolding are done by the function \texttt{unfoldST}, which yields a state transformer with computation result of \texttt{(Map a Node, Gr a Int)}, i.e.\ a map from the type of items to unfold, \texttt{a}, (e.g. semantic concepts) to nodes in the FGL graph and the actual FGL graph with nodes of type \texttt{a} and edges simply with integer weights (all edges have weight 1).
 
-Since the \texttt{ST} structure conforms to the laws of monads \emph{state transformation computations} can be chained into a pipeline, and thus even though the code for the algorithm might look almost imperatively, it is indeed purely functional. Initially three \emph{references} to mutable state are constructed given each of the states an initial value. The \texttt{visit} function simply ``visits'' a item (e.g. semantic concept): if the item has already been visited, the unique index for its corresponding node in the FGL graph is simply returned; otherwise a new unique node index is allocated and outgoing relations from this item are visited by recursive calls. Mutable states can by modified by the \texttt{modifySTRef} function, which takes a reference to the state to modify, and a \emph{transformation} function over the state. When the depth first search finishes, the map and FGL graph are returned as non-mutable structures as the result of the computation.
+Since the \texttt{ST} structure conforms to the laws of monads \emph{state transformation computations} can be chained into a pipeline, and thus even though the code for the algorithm might look almost imperatively, it is indeed purely functional. Initially three \emph{references} to mutable state are constructed given each of the states an initial value. The \texttt{visit} function simply ``visits'' an item (e.g. semantic concept): if the item has already been visited, the unique index for its corresponding node in the FGL graph is simply returned; otherwise a new unique node index is allocated and outgoing relations from this item are visited by recursive calls. Mutable states can by modified by the \texttt{modifySTRef} function, which takes a reference to the state to modify, and a \emph{transformation} function over the state. When the depth first search finishes, the map and FGL graph are returned as non-mutable structures as the result of the computation.
 
 \begin{figure}[ht]
 \begin{cframed}{\textwidth}
@@ -184,7 +184,7 @@ unfoldST r seeds =
                      return i
      -- Visit seeds
      mapM visit seeds
-     -- Read resuls and return map/graph-pair
+     -- Read results and return map/graph-pair
      list <- readSTRef nodesRef         
      nodeMap <- readSTRef mapRef
      let nodes = [n | (n, _) <- list]
@@ -196,3 +196,9 @@ unfoldST r seeds =
 \label{fig:st}
 \end{figure}
 \clearpage
+
+\section{Overall analysis and extraction algorithm}
+\label{sec:program}
+The implemented program loads a set of review texts from a plain text file. The texts are presumed to have been preprocessed by decent tokenization cf. Section~\ref{sec:tokenization}, and each line in the file should constitute a sentence. The set of positive and negative seed concepts, as well as the \emph{subject of interest} are simply defined directly in the source code for the program, since it is intended simply as a proof of concept system.
+
+The program prints the result of the analysis (if any) for each of the input sentences. The implemented extraction algorithm also makes a very primitive pronoun resolution, namely that the third person pronouns \emph{it}, \emph{they} and \emph{them} are simply identified as the subject of interest.

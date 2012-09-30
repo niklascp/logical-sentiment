@@ -2,11 +2,7 @@
 module Parser (
     parseLexicon,
     parseTree,
-
-    CcEnv,
-    createCcEnv,
-    closeCcEnv,
-    runCcEnv
+    runCc
   ) where
 
 -- Misc.
@@ -214,22 +210,24 @@ pAgreement :: Parser Agreement
 pAgreement = option [] (pBrackets $ pFeature `sepBy` (char ','))
 
 pFeature :: Parser Feature
-pFeature =     try (string "dcl"   >> return SDcl )
-           <|> try (string "adj"   >> return SAdj )
-           <|> try (string "pt"    >> return SPt  )
-           <|> try (string "nb"    >> return SNb  )
-           <|> try (string "ng"    >> return SNg  )
-           <|> try (string "em"    >> return SEm  )
-           <|> try (string "inv"   >> return SInv )
-           <|> try (string "pss"   >> return SPss )
-           <|> try (string "b"     >> return SB   )
-           <|> try (string "to"    >> return To   )
+pFeature =     try (string "dcl"   >> return FDcl )
+           <|> try (string "adj"   >> return FAdj )
+           <|> try (string "pt"    >> return FPt  )
+           <|> try (string "nb"    >> return FNb  )
+           <|> try (string "ng"    >> return FNg  )
+           <|> try (string "em"    >> return FEm  )
+           <|> try (string "inv"   >> return FInv )
+           <|> try (string "pss"   >> return FPss )
+           <|> try (string "b"     >> return FB   )
+           <|> try (string "to"    >> return FTo  )
            <|> try (string "thr"   >> return FThr )
+           <|> try (string "frg"   >> return FFrg )
            <|> try (string "wq"    >> return FWq  )
            <|> try (string "qem"   >> return FQem )
            <|> try (string "q"     >> return FQ   )
            <|> try (string "for"   >> return FFor )
-           <|> ( do { v <- many1 upper; return $ FVar v } )
+           <|> ( do { v <- many1 upper; return $ FVar     v } )
+           <|> ( do { v <- many1 lower; return $ FUnknown v } )
            <?> "feature"
 
 parseLexicon :: String -> Lexicon
@@ -258,32 +256,8 @@ getSection h s =
            -- putStr ("Got line: " ++ inpStr ++ "\n")
            getSection h (s ++ inpStr ++ "\n")
 
-data CcEnv = CcEnv { 
-     --serverInHandle  :: Handle,
-     --serverOutHandle :: Handle
-}
-
-createCcEnv :: IO (CcEnv)
-createCcEnv = do
-  -- Create C & C server process
-  (_, _, _, serverHandle) <- 
-     createProcess  (proc "bin/soap_server" [
-         "--candc", "models",
-         "--server", "localhost:9000",
-         "--log", "log/candc.log",
-         "--candc-parser-noisy_rules","false",
-         "--candc-printer", "prolog"]) 
-  putStr "Starting C & C server process...\n"
-  return $ CcEnv -- inHandle outHandle
-
-closeCcEnv :: CcEnv -> IO () 
-closeCcEnv env = do
-  --hClose (serverInHandle env)
-  --hClose (serverOutHandle env)
-  return ()
-
-runCcEnv :: CcEnv -> (Word -> Word) -> String -> IO (Maybe PTree)
-runCcEnv env a s = do 
+runCc :: (Word -> Word) -> String -> IO (Maybe PTree)
+runCc a s = do 
   (Just inHandle, Just outHandle, _, processHandle) <- 
      createProcess  (proc "bin/soap_client_fix" [
          "--url", "http://localhost:9000"]) {
@@ -307,18 +281,8 @@ runCcEnv env a s = do
    
   if (isJust tree) && (isJust lexicon) then
     do let l = map a $ parseLexicon $ fromJust lexicon
-       putStr "\n"
-       --putStr "Lexicon:\n"
-       -- putStr lexicon  
-       --putStr $ unlines $ map show (l)
-       -- putStr "\n"
-       -- putStr $ fromJust tree
        let tree' = filter (not . isSpace) $ fromJust tree
        let t = parseTree l tree'   
-       -- if (isJust t)
-       -- putStr "Tree:\n"  
-       -- putStr tree'
-       -- putStr "\n"
        return t
   else
     return Nothing
